@@ -1,25 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8sh+WyWg9QZD4riBE5UgGvN7i6CzXn/En8e1Q" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+        integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8sh+WyWg9QZD4riBE5UgGvN7i6CzXn/En8e1Q" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        integrity="sha512-cAy+X+goh6pYdZ1FE3ew1unb+jjzdQY1TMgn4zv6tVzSx5FXQ+AQQDd1P+0N/fbl04dz1j1wr+3lO5P+K5qAcg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="/path/to/your/index.css">
-    <title>Giáng sinh</title>
+    <title>Giáng sinh vui vẻ</title>
 </head>
+
 <body>
 
     <div class="container">
         <div class="center-div text-center">
             <img src="/assets/img/background_1.jpg" class="img-fluid" alt="Background Image">
             <button type="button" class="btn btn-primary mt-3" data-toggle="modal" data-target="#myModal">
-                Hiển thị Bảng
+                <i class="fas fa-heart" style="color: pink;"></i> Nhấn vào đây để có người yêu
             </button>
         </div>
     </div>
 
     <!-- Modal -->
-    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -30,6 +37,7 @@
                 </div>
                 <div class="modal-body">
                     Có CC
+                    <div id="hearts-container"></div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
@@ -38,8 +46,36 @@
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJ6fkSODnyLAg7e3Vo3GnbDpC6v6fnQ8sz4O6Zz6d6OW/EIiJIT7p" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8sh+WyWg9QZD4riBE5UgGvN7i6CzXn/En8e1Q" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJ6fkSODnyLAg7e3Vo3GnbDpC6v6fnQ8sz4O6Zz6d6OW/EIiJIT7p"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"
+        integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8sh+WyWg9QZD4riBE5UgGvN7i6CzXn/En8e1Q"
+        crossorigin="anonymous"></script>
+    <script>
+        function createHeart() {
+            const heart = document.createElement('i');
+            heart.classList.add('fas', 'fa-heart', 'heart');
+            const container = document.getElementById('hearts-container');
+            container.appendChild(heart);
+
+            // Remove the heart element after the animation ends
+            heart.addEventListener('animationend', () => {
+                container.removeChild(heart);
+            });
+        }
+
+        // Trigger the creation of hearts when the modal is shown
+        $('#myModal').on('shown.bs.modal', function () {
+            // Create three hearts, you can adjust the number as needed
+            createHeart();
+            createHeart();
+            createHeart();
+        });
+    </script>
 </body>
+
 </html>
