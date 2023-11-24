@@ -9,8 +9,47 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
         integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="/assets/css/index.css">
     <title>Giáng sinh</title>
+    <style>
+        body {
+            margin: 0;
+            background: url('/background.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        #hearts-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            /* Ensure the hearts appear above other content */
+        }
+
+        .heart {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: #FF5252;
+            clip-path: path("M12 4.419c-2.826-5.695-11.999-4.064-11.999 3.27 0 7.27 9.903 10.938 11.999 15.311 2.096-4.373 12-8.041 12-15.311 0-7.327-9.17-8.972-12-3.27z");
+            transform: scale(20);
+            animation: heartAnimation ease-in-out infinite;
+        }
+
+        @keyframes heartAnimation {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-500px);
+                opacity: 0;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -23,7 +62,7 @@
                     data-bs-target="#exampleModal">
                     <i class="fas fa-heart" style="color: pink;"></i> Nhấn vào đây để có người yêu
                 </button>
-                
+
                 <!-- Modal -->
                 <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
                     aria-hidden="true">
@@ -38,7 +77,8 @@
                                 Có cc
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ngu loz chưa</button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ngu loz
+                                    chưa</button>
                             </div>
                         </div>
                     </div>
@@ -52,7 +92,33 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
         crossorigin="anonymous"></script>
-    <script src="/assets/js/index.js"></script>
+    <script>
+
+        $(document).ready(function () {
+            // Function to create a heart animation
+            function createHeart() {
+                const heart = $("<div/>").addClass("heart").appendTo("#hearts-container");
+                heart.css({
+                    left: Math.random() * 100 + "vw",
+                    top: Math.random() * 100 + "vh",
+                    animationDuration: Math.random() * 1 + 1 + "s", // Adjust the speed range as needed
+                });
+
+                // Remove the heart from the DOM after the animation
+                heart.on("animationend", function () {
+                    $(this).remove();
+                });
+            }
+
+            // Function to start the heart animations
+            function startHearts() {
+                // Interval for continuously creating hearts
+                setInterval(createHeart, 450); // Adjust the interval for more hearts
+            }
+                startHearts();
+        });
+
+    </script>
 </body>
 
 </html>
