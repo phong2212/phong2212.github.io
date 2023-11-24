@@ -1,0 +1,174 @@
+:root {
+  --font-playfair: "Playfair Display", sans-serif;
+  --font-sans: "Open Sans", "Helvetica Neue", sans-serif;
+  --desc-text: #212529;
+  --sub-heading: #fc8621;
+  --d: 700ms;
+  --e: ease-in-out;
+}
+
+*,
+input,
+a,
+li {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  caret-color: transparent;
+}
+
+* {
+  font-family: var(--font-sans);
+}
+
+input {
+  caret-color: black;
+}
+
+a {
+  text-decoration: none!important;
+  color: #000;
+}
+
+li {
+  list-style: none;
+}
+
+img,
+svg {
+  vertical-align: middle;
+}
+
+header {
+  overflow: hidden;
+  text-shadow: 2px 2px 5px #000;
+}
+
+.txtshd-none{
+  text-shadow: none!important;
+}
+
+.animate__paused {
+  animation-play-state: paused;
+}
+
+/* HEADER  */
+
+.subtitle {
+  color: var(--sub-heading);
+  letter-spacing: -0.1rem;
+  font-weight: bold;
+}
+
+.title {
+  font-family: var(--font-playfair);
+  color: #000;
+  font-size: 2.8rem;
+  font-weight: bold;
+  line-height: 4rem;
+}
+
+.desc {
+  font-size: 0.9rem;
+  color: var(--desc-text);
+}
+
+#Overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 5;
+}
+
+.background {
+  background-image: url(../images/home/background_1.jpg);
+  background-size: cover;
+  background-repeat: repeat;
+  background-position: center center;
+  position: relative;
+  z-index: 0;
+}
+
+.background:before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.25);
+  z-index: 1;
+}
+
+.background > .container {
+  position: relative;
+  z-index: 2;
+}
+
+.background,
+.background > .container > .row {
+  height: 100vh;
+  min-height: 650px;
+}
+
+.background .overlay:before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.35);
+  z-index: 1;
+}
+
+.background .heading {
+  font-family: var(--font-playfair);
+  font-size: 3rem;
+  color: #fff;
+  font-weight: bold;
+}
+
+.background .photo-info {
+  position: absolute;
+  bottom: 1.8rem;
+  left: 2rem;
+  color: #fff;
+  text-shadow: 2px 2px 5px #000;
+}
+
+.background .photo-info .fa-location-dot {
+  width: 40px;
+  height: 40px;
+  line-height: 40px;
+  text-align: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  margin-right: 15px;
+}
+
+.background .photo-info a {
+  color: #fff;
+}
+
+/* FOOTER  */
+
+.footer {
+  font-size: 14px;
+  color: #888;
+  padding: 70px 0 0;
+}
+
+.footer p,
+.footer a,
+.footer span {
+  color: #888;
+}
+
+.footer a:hover {
+  opacity: 0.8;
+}

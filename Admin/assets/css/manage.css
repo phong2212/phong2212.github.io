@@ -1,0 +1,52 @@
+#switch {
+    cursor: pointer;
+}
+
+.Animation_click i {
+    transition: transform 0.3s ease-in-out;
+}
+
+.Animation_click:hover i {
+    transform: translateY(-3px);
+}
+
+.Animation_click {
+    transition: opacity 0.3s ease-in-out;
+}
+
+.Animation_click:hover {
+    opacity: 0.8;
+}
+
+.edit-button {
+    background-color: yellow;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    color: black;
+}
+
+.edit-button:hover {
+    background-color: #ffd700;
+}
+
+.delete-button {
+    background-color: red;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    color: white;
+  }
+  
+  .delete-button:hover {
+    background-color: #cc0000;
+  }
+
+  .truncate {
+    max-width: 8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

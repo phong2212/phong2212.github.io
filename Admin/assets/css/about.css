@@ -1,0 +1,29 @@
+#aboutus {
+  overflow: hidden;
+  padding: 2.5rem 0 1rem;
+}
+
+#choose,
+#partners,
+#faq {
+  overflow: hidden;
+  padding: 0 0 1rem;
+}
+
+/* Choose */
+.choose__icon {
+  width: 7rem;
+  height: 7rem;
+}
+
+.choose__header {
+  font-family: var(--font-playfair);
+  margin-top: 1rem;
+  font-size: 1.2rem;
+  font-weight: bolder;
+}
+
+.choose_desc {
+  font-size: 0.9rem;
+  color: var(--desc-text);
+}

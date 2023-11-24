@@ -1,0 +1,14 @@
+{
+	"require": {
+		"bramus/router": "~1.6",
+		"gregwar/captcha": "^1.2"
+	},
+	"autoload": {
+		"psr-4": {
+			"Apps\\": "Apps/"
+		},
+		"files": [
+			"Apps/bootstrap.php"
+		]
+	}
+}
