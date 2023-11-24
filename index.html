@@ -9,8 +9,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
         integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <title>Giáng sinh</title>
+    <title>Giáng sinh vui vẻ</title>
     <style>
+        * {
+            caret-color: transparent !important;
+        }
+
         body {
             margin: 0;
             background: url('/background.jpg') no-repeat center center fixed;
@@ -25,7 +29,6 @@
             height: 100%;
             pointer-events: none;
             z-index: 9999;
-            /* Ensure the hearts appear above other content */
         }
 
         .heart {
@@ -49,36 +52,60 @@
                 opacity: 0;
             }
         }
+
+        .modal-content {
+            backdrop-filter: blur(1px);
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        #toggleSoundButton,
+        #modalTitle,
+        #modalText {
+            backdrop-filter: blur(1px);
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        }
     </style>
 </head>
 
 <body>
     <div id="hearts-container"></div>
+    <audio id="sound1" autoplay>
+        <source src="We Wish You a Merry Christmas with Lyrics - Christmas Carol & Song.mp3" type="audio/mp3">
+        Your browser does not support the audio tag.
+    </audio>
+
+    <audio id="sound2" style="display: none;">
+        <source src="Thầy Giáo Ba Cười Ỉa - Meme Video.mp3" type="audio/mp3">
+        Your browser does not support the audio tag.
+    </audio>
     <div class="container">
         <div class="row vh-100">
-            <div class="d-flex justify-content-center align-items-center">
-                <!-- Button trigger modal -->
-                <button id="love" type="button" class="btn btn-outline-dark" data-bs-toggle="modal"
-                    data-bs-target="#exampleModal">
-                    <i class="fas fa-heart" style="color: pink;"></i> Nhấn vào đây để có người yêu
-                </button>
+            <div class="row align-items-center justify-content-center">
+                <div class=" row">
+                    <h1 id="modalTitle" class="text-center">Bạn chưa có người yêu?</h1>
+                </div>
+                <div class=" row">
+                    <h1 id="modalText" class="text-center">Không sao, hãy nhấn vào nút này!</h1>
+                </div>
+                <div class=" row"  style="width: 500px">
+                    <!-- Button trigger modal -->
+                    <button id="toggleSoundButton" type="button" class="btn btn-outline-dark py-3 px-5"
+                        data-bs-toggle="modal" data-bs-target="#exampleModal">
+                        <i class="fa-solid fa-heart fa-bounce" style="color: pink;"></i> Nhấn vào đây để có người yêu
+                    </button>
+                </div>
 
                 <!-- Modal -->
                 <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
                     aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content">
-                            <div class="modal-header">
-                                <h1 class="modal-title fs-5" id="exampleModalLabel">Lạnh đít cmm luôn</h1>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                    aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                Có cc
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ngu loz
-                                    chưa</button>
+                            <div class="modal-body text-center">
+                                <h1>Có cc</h1>
+                                <img src="https://gifdb.com/images/file/el-risitas-laughing-eduxg24hnehd1bt6.gif"
+                                    alt="Hình ảnh CC" class="img-fluid mt-5">
                             </div>
                         </div>
                     </div>
@@ -95,27 +122,62 @@
     <script>
 
         $(document).ready(function () {
-            // Function to create a heart animation
+            var isSoundOn = true;
+            var sound1 = document.getElementById("sound1");
+            var sound2 = document.getElementById("sound2");
+
+            // Ẩn button ban đầu
+            $("#toggleSoundButton").hide();
+            $("#modalText").hide();
+
+            // Hiện dòng chữ "Bạn chưa có người yêu?" trong 5 giây
+            setTimeout(function () {
+                $("#modalTitle").show();
+
+                // Ẩn dòng chữ và hiện dòng chữ "Không sao bạn hãy nhấn vào nút bên dưới" sau 5 giây nữa
+                setTimeout(function () {
+                    $("#modalTitle").hide();
+                    $("#modalText").show();
+
+                    // Hiện button sau 5 giây nữa
+                    setTimeout(function () {
+                        $("#toggleSoundButton").show();
+                    }, 5000);
+                }, 3000);
+            }, 3000);
+
+            $("#toggleSoundButton").on("click", function () {
+                if (isSoundOn) {
+                    $("#sound1").get(0).pause();
+                    $("#sound2").get(0).play();
+                } else {
+                    $("#sound2").get(0).pause();
+                    $("#sound1").get(0).play();
+                }
+                isSoundOn = !isSoundOn;
+            });
+
             function createHeart() {
                 const heart = $("<div/>").addClass("heart").appendTo("#hearts-container");
                 heart.css({
                     left: Math.random() * 100 + "vw",
                     top: Math.random() * 100 + "vh",
-                    animationDuration: Math.random() * 1 + 1 + "s", // Adjust the speed range as needed
+                    animationDuration: Math.random() * 1 + 1 + "s",
                 });
-
-                // Remove the heart from the DOM after the animation
                 heart.on("animationend", function () {
                     $(this).remove();
                 });
             }
 
-            // Function to start the heart animations
             function startHearts() {
-                // Interval for continuously creating hearts
-                setInterval(createHeart, 450); // Adjust the interval for more hearts
+                createHeart();
+                setTimeout(function () {
+                    clearInterval(heartInterval);
+                }, 30000);
             }
-                startHearts();
+
+            startHearts();
+            const heartInterval = setInterval(createHeart, 450);
         });
 
     </script>
