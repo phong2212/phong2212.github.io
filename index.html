@@ -71,6 +71,10 @@
 
 <body>
     <div id="hearts-container"></div>
+    <audio id="sound1" autoplay muted>
+        <source src="We Wish You a Merry Christmas with Lyrics - Christmas Carol & Song.mp3" type="audio/mp3">
+        Your browser does not support the audio tag.
+    </audio>
 
     <audio id="sound2" style="display: none;">
         <source src="Thầy Giáo Ba Cười Ỉa - Meme Video.mp3" type="audio/mp3">
@@ -79,14 +83,14 @@
     <div class="container">
         <div class="row vh-100">
             <div class="d-flex flex-column align-items-center justify-content-center">
-                    <h1 id="modalTitle" class="text-center">Bạn chưa có người yêu?</h1>
+                <h1 id="modalTitle" class="text-center">Bạn chưa có người yêu?</h1>
 
-                    <h1 id="modalText" class="text-center">Không sao, hãy nhấn vào nút này!</h1>
-                    <!-- Button trigger modal -->
-                    <button id="toggleSoundButton" type="button" class="btn btn-outline-dark py-3 px-5" style="width: 400px"
-                        data-bs-toggle="modal" data-bs-target="#exampleModal">
-                        <i class="fa-solid fa-heart fa-bounce" style="color: pink;"></i> Nhấn vào đây để có người yêu
-                    </button>
+                <h1 id="modalText" class="text-center">Không sao, hãy nhấn vào nút này!</h1>
+                <!-- Button trigger modal -->
+                <button id="toggleSoundButton" type="button" class="btn btn-outline-dark py-3 px-5" style="width: 400px"
+                    data-bs-toggle="modal" data-bs-target="#exampleModal">
+                    <i class="fa-solid fa-heart fa-bounce" style="color: pink;"></i> Nhấn vào đây để có người yêu
+                </button>
 
                 <!-- Modal -->
                 <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
@@ -113,14 +117,16 @@
     <script>
 
         $(document).ready(function () {
-            var sound2 = $("#sound2")[0];
+            var sound1 = $("#sound1")[0];
 
+            var sound2 = $("#sound2")[0];
+            sound1.muted = false;
             // Hide button and modal text initially
             $("#toggleSoundButton").hide();
             $("#modalText").hide();
             // Play sound1 in response to a user interaction (e.g., button click)
             $("#toggleSoundButton").on("click", function () {
-                    sound2.play();
+                sound2.play();
             });
 
             // Hiện dòng chữ "Bạn chưa có người yêu?" trong 5 giây
