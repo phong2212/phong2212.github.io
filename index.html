@@ -3,67 +3,203 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xé Túi Mù Gấu Bông</title>
+    <title>Mini games</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="game-select.css">
+    <link rel="icon" type="image/x-icon" href="./assets/img/icon.png">
 </head>
 <body>
+    <div class="loading-screen" style="caret-color: transparent;">
+        <div class="loading-scene">
+            <div class="loading-bear"></div>
+        </div>
+        <div class="loading-progress">
+            <div class="loading-progress-bar"></div>
+            <div class="loading-progress-text">0%</div>
+        </div>
+    </div>
+
+    <div class="name-screen">
+        <div class="name-input-container">
+            <label class="name-label" style="caret-color: transparent;">Bạn tên là:</label>
+            <input type="text" class="name-input" style="text-transform: uppercase;">
+        </div>
+        <div class="virtual-keyboard">
+            <div class="keyboard-row">
+                <div class="key">Q</div>
+                <div class="key">W</div>
+                <div class="key">E</div>
+                <div class="key">R</div>
+                <div class="key">T</div>
+                <div class="key">Y</div>
+                <div class="key">U</div>
+                <div class="key">I</div>
+                <div class="key">O</div>
+                <div class="key">P</div>
+            </div>
+            <div class="keyboard-row">
+                <div class="key">A</div>
+                <div class="key">S</div>
+                <div class="key">D</div>
+                <div class="key">F</div>
+                <div class="key">G</div>
+                <div class="key">H</div>
+                <div class="key">J</div>
+                <div class="key">K</div>
+                <div class="key">L</div>
+            </div>
+            <div class="keyboard-row">
+                <div class="key">Z</div>
+                <div class="key">X</div>
+                <div class="key">C</div>
+                <div class="key">V</div>
+                <div class="key">B</div>
+                <div class="key">N</div>
+                <div class="key">M</div>
+                <div class="key backspace"><i class="fas fa-backspace"></i></div>
+            </div>
+            <div class="keyboard-row">
+                <div class="key space">Space</div>
+                <div class="key enter">Enter</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-select-screen" style="caret-color: transparent;">
+        <div class="game-header">
+            <div class="level-display">
+                <i class="fas fa-star"></i>
+                <div class="level-info">
+                    <span>Level: 1</span>
+                    <div class="experience-bar">
+                        <div class="experience-progress"></div>
+                    </div>
+                </div>
+            </div>
+            <h1 class="game-select-title">Chọn Game</h1>
+            <button class="daily-challenges-button">
+                <i class="fas fa-star"></i> Nhiệm Vụ
+            </button>
+        </div>
+        <div class="game-grid">
+            <div class="game-card" data-game="teddy">
+                <i class="game-icon fas fa-gift"></i>
+                <h2 class="game-title">Xé Túi Mù Gấu Bông</h2>
+                <p class="game-description">Mở hộp quà để sưu tập những chú gấu bông dễ thương!</p>
+            </div>
+            <div class="game-card coming-soon">
+                <i class="game-icon fas fa-question"></i>
+                <h2 class="game-title">Coming Soon</h2>
+                <p class="game-description">Game mới sẽ sớm ra mắt!</p>
+            </div>
+            <div class="game-card coming-soon">
+                <i class="game-icon fas fa-question"></i>
+                <h2 class="game-title">Coming Soon</h2>
+                <p class="game-description">Game mới sẽ sớm ra mắt!</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-transition" style="caret-color: transparent;">
+        <div class="game-transition-content">
+            <div class="game-transition-text">Đang vào game...</div>
+        </div>
+    </div>
+
     <div class="container" style="caret-color: transparent;">
-        <header>
+        <header style="cursor: default;">
+            <button class="back-to-select">
+                <i class="fas fa-arrow-left"></i> Quay Lại
+            </button>
             <h1><i class="fas fa-heart"></i> Xé Túi Mù Gấu Bông <i class="fas fa-heart"></i></h1>
             <p>Nhấn vào hộp để mở gấu bông dễ thương!</p>
+            <div class="header-stats">
+                <div class="game-stats">
+                    <div class="moves-left">Lượt còn lại: 3</div>
+                    <div class="current-score">Điểm: 0</div>
+                </div>
+                <button class="leaderboard-button">
+                    <i class="fas fa-trophy"></i> Bảng Điểm
+                </button>
+            </div>
         </header>
-        
+
+        <div class="leaderboard-panel">
+            <div class="leaderboard-content">
+                <h2><i class="fas fa-crown"></i> Bảng Xếp Hạng</h2>
+                <div class="leaderboard-list"></div>
+                <button class="close-leaderboard">
+                    <i class="fas fa-times"></i> Đóng
+                </button>
+            </div>
+        </div>
+
         <div class="game-area">
+            <div class="unlocked-section">
+                <h2>Đã Mở</h2>
+                <div class="unlocked-container"></div>
+            </div>
+
+            <div class="cart">
+                <div class="boxes-container">
+                    <div class="play-again-overlay">
+                        <button>
+                            <i class="fas fa-redo"></i> Chơi Lại
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <div class="collection-section">
                 <h2>Bộ Sưu Tập</h2>
                 <div class="collection-container">
                     <div class="collection-item">
                         <i class="fas fa-bear"></i>
                         <span>Công Chúa Hồng</span>
+                        <img class="teddy-image" src="assets/img/pink-princess.png" alt="Công Chúa Hồng">
                     </div>
                     <div class="collection-item">
                         <i class="fas fa-bear"></i>
                         <span>Gấu Xanh Dâu</span>
+                        <img class="teddy-image" src="assets/img/blue-strawberry.png" alt="Gấu Xanh Dâu">
                     </div>
                     <div class="collection-item">
                         <i class="fas fa-bear"></i>
                         <span>Gấu Dâu Tây</span>
+                        <img class="teddy-image" src="assets/img/strawberry.png" alt="Gấu Dâu Tây">
                     </div>
                     <div class="collection-item">
                         <i class="fas fa-bear"></i>
                         <span>Gấu Kẹo Bông</span>
+                        <img class="teddy-image" src="assets/img/cotton-candy.png" alt="Gấu Kẹo Bông">
                     </div>
                     <div class="collection-item">
                         <i class="fas fa-bear"></i>
                         <span>Gấu Mật Ong</span>
+                        <img class="teddy-image" src="assets/img/honey.png" alt="Gấu Mật Ong">
                     </div>
                     <div class="collection-item">
                         <i class="fas fa-bear"></i>
                         <span>Gấu Cầu Vồng</span>
+                        <img class="teddy-image" src="assets/img/rainbow.png" alt="Gấu Cầu Vồng">
                     </div>
                     <div class="collection-item">
                         <i class="fas fa-bear"></i>
                         <span>Gấu Kẹo Dẻo</span>
+                        <img class="teddy-image" src="assets/img/gummy.png" alt="Gấu Kẹo Dẻo">
                     </div>
                     <div class="collection-item">
                         <i class="fas fa-bear"></i>
                         <span>Gấu Bánh Cupcake</span>
+                        <img class="teddy-image" src="assets/img/cupcake.png" alt="Gấu Bánh Cupcake">
                     </div>
                     <div class="collection-item secret">
                         <i class="fas fa-question"></i>
                         <span>???</span>
+                        <img class="teddy-image" src="assets/img/golden-unicorn.png" alt="Kỳ Lân Vàng">
                     </div>
                 </div>
-            </div>
-
-            <div class="cart">
-                <div class="boxes-container"></div>
-            </div>
-
-            <div class="unlocked-section">
-                <h2>Đã Mở</h2>
-                <div class="unlocked-container"></div>
             </div>
         </div>
 
@@ -72,11 +208,12 @@
                 <img id="teddyImage" src="" alt="Gấu bông đã mở">
                 <h2 id="teddyName"></h2>
                 <p id="teddyDescription"></p>
-                <button id="restartButton" class="restart-button"><i class="fas fa-redo"></i> Chơi Lại</button>
+                <button id="restartButton" class="restart-button"><i class="fas fa-redo"></i> Chọn Lại</button>
             </div>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <script src="leaderboard.js"></script>
     <script src="script.js"></script>
 </body>
 </html> 

@@ -1,0 +1,145 @@
+.game-select-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: start;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #fff5f7 0%, #ffd1dc 100%);
+    padding: 20px;
+}
+
+.game-select-title {
+    color: #ff69b4;
+    font-size: 2.5rem;
+    margin-bottom: 40px;
+    text-align: center;
+    text-shadow: 2px 2px 4px rgba(255, 105, 180, 0.3);
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+}
+
+.game-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    max-width: 1200px;
+    width: 100%;
+    padding: 20px;
+}
+
+.game-card {
+    position: relative;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 15px;
+    padding: 20px;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    overflow: hidden;
+    aspect-ratio: 16/9;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border: 2px solid #ff69b4;
+    box-shadow: 0 4px 8px rgba(255, 105, 180, 0.2);
+}
+
+.game-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(255, 105, 180, 0.3);
+}
+
+.game-icon {
+    font-size: 3rem;
+    color: #ff69b4;
+    margin-bottom: 15px;
+    text-shadow: 2px 2px 4px rgba(255, 105, 180, 0.3);
+}
+
+.game-title {
+    color: #ff69b4;
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+}
+
+.game-description {
+    color: #ff69b4;
+    font-size: 1rem;
+    opacity: 0.9;
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+}
+
+.game-card.coming-soon {
+    opacity: 0.7;
+    cursor: not-allowed;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.game-card.coming-soon::after {
+    content: 'Coming Soon';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 105, 180, 0.8);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 1.2rem;
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    z-index: 3;
+}
+
+.game-transition {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 245, 247, 0.95);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.game-transition-content {
+    text-align: center;
+}
+
+.game-transition-text {
+    color: #ff69b4;
+    font-size: 3.5rem;
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    animation: wave 2s infinite;
+    text-shadow: 2px 2px 4px rgba(255, 105, 180, 0.3);
+}
+
+@keyframes wave {
+    0% { transform: translateY(0) scale(1); }
+    25% { transform: translateY(-10px) scale(1.1); }
+    50% { transform: translateY(0) scale(1); }
+    75% { transform: translateY(10px) scale(0.9); }
+    100% { transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 768px) {
+    .game-select-title {
+        font-size: 2rem;
+    }
+    
+    .game-grid {
+        grid-template-columns: 1fr;
+        padding: 10px;
+    }
+    
+    .game-title {
+        font-size: 1.2rem;
+    }
+    
+    .game-transition-text {
+        font-size: 2.5rem;
+    }
+}
