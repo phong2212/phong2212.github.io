@@ -179,7 +179,7 @@ nameInput.addEventListener('input', (e) => {
     e.target.value = e.target.value.toUpperCase();
 });
 
-// Update handleKeyClick function
+// Update handleKeyClick functionđ
 function handleKeyClick(key) {
     const keyContent = key.textContent.toUpperCase();
     
@@ -564,7 +564,7 @@ function showDailyChallenges() {
                 <div class="challenge-item ${challenge.completed ? 'completed' : ''}">
                     <i class="fas ${challenge.completed ? 'fa-check-circle' : 'fa-circle'}"></i>
                     <span>${challenge.description}</span>
-                    <span class="reward">+${challenge.reward} điểm</span>
+                    <span class="reward">+${challenge.reward} exp</span>
                 </div>
             `).join('')}
         </div>
