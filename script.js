@@ -170,7 +170,7 @@ nameInput.addEventListener('input', (e) => {
 // Update handleKeyClick function
 function handleKeyClick(key) {
     const keyContent = key.textContent.toUpperCase();
-    
+
     // Add active class for animation
     key.classList.add('active');
     setTimeout(() => key.classList.remove('active'), 200);
@@ -213,10 +213,10 @@ function startGame() {
         const isExistingPlayer = leaderboardManager.isNameTaken(playerName);
         currentGameState.playerName = playerName;
         loadGameState();
-        
+
         // Start background music
         playSound('background', 0.3);
-        
+
         // Hide name screen and show game selection
         document.querySelector('.name-screen').style.display = 'none';
         document.querySelector('.game-select-screen').style.display = 'flex';
@@ -268,7 +268,7 @@ function showWelcomeBackMessage(playerName) {
 
 function startLoadingAnimation() {
     let progress = 0;
-    
+
     // First phase: 0% to 20% in 2s
     const firstPhase = setInterval(() => {
         progress += 1;
@@ -311,7 +311,7 @@ function startLoadingAnimation() {
     function updateProgress(value) {
         progressBar.style.width = `${value}%`;
         progressText.textContent = `${value}%`;
-        
+
         // Calculate bear position based on scene width
         const sceneWidth = loadingScene.offsetWidth;
         const bearWidth = loadingBear.offsetWidth;
@@ -363,12 +363,17 @@ function createBoxes() {
 }
 
 function addUnlockedTeddy(teddy) {
-    if (!currentGameState.unlockedTeddies[teddy.name]) {
-        currentGameState.unlockedTeddies[teddy.name] = teddy;
+    if (!currentGameState.teddyCounts[teddy.name]) {
         currentGameState.teddyCounts[teddy.name] = 1;
     } else {
         currentGameState.teddyCounts[teddy.name]++;
     }
+
+    // Only add to unlockedTeddies if it's a secret teddy
+    if (teddy.rarity === 'rare' && !currentGameState.unlockedTeddies[teddy.name]) {
+        currentGameState.unlockedTeddies[teddy.name] = teddy;
+    }
+
     updateUnlockedDisplay();
     saveGameState();
 }
@@ -377,19 +382,37 @@ function updateUnlockedDisplay() {
     const unlockedContainer = document.querySelector('.unlocked-container');
     unlockedContainer.innerHTML = '';
 
-    Object.entries(currentGameState.unlockedTeddies).forEach(([name, teddy]) => {
-        const count = currentGameState.teddyCounts[name];
-        const score = TEDDY_SCORES[name];
+    Object.entries(currentGameState.teddyCounts).forEach(([name, count]) => {
+        const teddy = teddies.find(t => t.name === name);
+        if (teddy) {
         const unlockedItem = document.createElement('div');
-        unlockedItem.className = `unlocked-item ${teddy.rarity === 'rare' ? 'shiny' : ''}`;
-        unlockedItem.innerHTML = `
-            <div class="teddy-info">
-            <span class="teddy-name">${name}</span>
-                <span class="teddy-score">+${score} điểm</span>
-            </div>
-            <span class="teddy-count ${count > 1 ? 'show' : ''}">x${count}</span>
-        `;
+            unlockedItem.className = `unlocked-item ${teddy.rarity === 'rare' ? 'shiny' : ''}`;
+
+            const teddyInfo = document.createElement('div');
+            teddyInfo.className = 'teddy-info';
+
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'teddy-name';
+            nameSpan.textContent = name;
+
+            const scoreSpan = document.createElement('span');
+            scoreSpan.className = 'teddy-score';
+            scoreSpan.textContent = `+${TEDDY_SCORES[name]} điểm`;
+
+            teddyInfo.appendChild(nameSpan);
+            teddyInfo.appendChild(scoreSpan);
+
+            unlockedItem.appendChild(teddyInfo);
+
+            if (count > 1) {
+                const countSpan = document.createElement('span');
+                countSpan.className = 'teddy-count show';
+                countSpan.textContent = `x${count}`;
+                unlockedItem.appendChild(countSpan);
+            }
+
         unlockedContainer.appendChild(unlockedItem);
+        }
     });
 }
 
@@ -433,7 +456,7 @@ function showDailyChallenges() {
             `).join('')}
         </div>
     `;
-    
+
     document.body.appendChild(challengesContainer);
 
     // Add close button functionality
@@ -454,12 +477,18 @@ function unboxTeddy(index) {
     const teddyDescription = document.getElementById('teddyDescription');
     const boxesContainer = document.querySelector('.boxes-container');
     const restartButton = document.getElementById('restartButton');
+    const teddyContent = unboxedTeddy.querySelector('.teddy-content');
+
+    // Remove any existing close button
+    const existingCloseButton = teddyContent.querySelector('.game-over-button.close');
+    if (existingCloseButton) {
+        existingCloseButton.remove();
+    }
 
     currentGameState.hasPicked = true;
     currentGameState.movesLeft--;
     boxesContainer.classList.add('has-picked');
     box.classList.add('picked');
-    restartButton.classList.add('show');
 
     const teddy = currentGameState.boxes[index];
     
@@ -468,13 +497,14 @@ function unboxTeddy(index) {
         playSound('rare', 0.8);
         teddyName.classList.add('secret');
         teddyDescription.classList.add('secret');
+        // Only add experience for rare teddies
+        addExperience(20);
     } else {
         playSound('common', 0.6);
         teddyName.classList.remove('secret');
         teddyDescription.classList.remove('secret');
     }
 
-    // Play click sound instead of open sound
     playSound('click', 0.5);
 
     setTimeout(() => {
@@ -491,18 +521,16 @@ function unboxTeddy(index) {
             showChallengeComplete('collectRare');
         }
 
-        if (Object.keys(currentGameState.unlockedTeddies).length >= 3 && 
+        if (Object.keys(currentGameState.teddyCounts).length >= 3 &&
             !currentGameState.dailyChallenges.collectAll.completed) {
             currentGameState.dailyChallenges.collectAll.completed = true;
             currentGameState.currentScore += currentGameState.dailyChallenges.collectAll.reward;
             showChallengeComplete('collectAll');
         }
 
-        // Add score and experience
+        // Add score
         const score = TEDDY_SCORES[teddy.name];
         currentGameState.currentScore += score;
-        const experienceGain = teddy.rarity === 'rare' ? 20 : 10;
-        addExperience(experienceGain);
         updateMovesAndScore();
 
         if (currentGameState.currentScore >= 100 && !currentGameState.dailyChallenges.highScore.completed) {
@@ -519,9 +547,21 @@ function unboxTeddy(index) {
             });
         }
 
-        // Check if game is over
-        if (currentGameState.movesLeft <= 0) {
-            setTimeout(showGameOver, 2000);
+        // Show restart button for first two moves, close button for last move
+        if (currentGameState.movesLeft > 0) {
+            restartButton.style.display = 'block';
+            restartButton.textContent = 'Chọn Lại';
+            restartButton.classList.add('show');
+        } else {
+            restartButton.style.display = 'none';
+            const closeButton = document.createElement('button');
+            closeButton.className = 'game-over-button close';
+            closeButton.textContent = 'Đóng';
+            closeButton.onclick = () => {
+                unboxedTeddy.style.display = 'none';
+                setTimeout(showGameOver, 500);
+            };
+            teddyContent.appendChild(closeButton);
         }
     }, 500);
 }
@@ -529,20 +569,35 @@ function unboxTeddy(index) {
 function showChallengeComplete(challengeKey) {
     const challenge = currentGameState.dailyChallenges[challengeKey];
     const completionPopup = document.createElement('div');
-    completionPopup.className = 'challenge-complete';
+    completionPopup.className = 'notification-popup challenge-popup';
     completionPopup.innerHTML = `
-        <i class="fas fa-star"></i>
-        <h3>Hoàn Thành Thử Thách!</h3>
-        <p>${challenge.description}</p>
-        <p class="reward">+${challenge.reward} điểm</p>
+        <div class="notification-content">
+            <div class="notification-header">
+                <i class="fas fa-check-circle"></i>
+                <h3>Hoàn Thành!</h3>
+            </div>
+            <p>${challenge.description}</p>
+            <div class="notification-rewards">
+                <div class="reward-item">
+                    <i class="fas fa-star"></i>
+                    <span>+${challenge.reward} điểm</span>
+                </div>
+            </div>
+            <button class="notification-close">Đóng</button>
+        </div>
     `;
-    
+
     document.body.appendChild(completionPopup);
     playSound('rare', 0.5);
-    
-    setTimeout(() => {
+
+    // Add experience equal to the challenge reward
+    addExperience(challenge.reward);
+
+    // Add close button functionality
+    const closeButton = completionPopup.querySelector('.notification-close');
+    closeButton.addEventListener('click', () => {
         completionPopup.remove();
-    }, 3000);
+    });
 }
 
 function showGameOver() {
@@ -611,15 +666,13 @@ function hidePlayAgainOverlay() {
 }
 
 function resetGame() {
-    // Preserve player data
+    // Reset game state but keep player data
     const playerData = {
         level: currentGameState.level,
         experience: currentGameState.experience,
         experienceToNextLevel: currentGameState.experienceToNextLevel,
         dailyChallenges: currentGameState.dailyChallenges,
-        lastPlayDate: currentGameState.lastPlayDate,
-        unlockedTeddies: currentGameState.unlockedTeddies,
-        teddyCounts: currentGameState.teddyCounts
+        lastPlayDate: currentGameState.lastPlayDate
     };
 
     // Reset game state
@@ -628,11 +681,22 @@ function resetGame() {
         boxes: [],
         hasPicked: false,
         movesLeft: 3,
-        currentScore: 0
+        currentScore: 0,
+        unlockedTeddies: {},  // Reset unlocked teddies
+        teddyCounts: {}       // Reset teddy counts
     };
 
     // Restore player data
     Object.assign(currentGameState, playerData);
+
+    // Hide unboxed teddy and remove any close button
+    const unboxedTeddy = document.getElementById('unboxedTeddy');
+    const teddyContent = unboxedTeddy.querySelector('.teddy-content');
+    const existingCloseButton = teddyContent.querySelector('.game-over-button.close');
+    if (existingCloseButton) {
+        existingCloseButton.remove();
+    }
+    unboxedTeddy.style.display = 'none';
 
     createBoxes();
     updateMovesAndScore();
@@ -663,7 +727,7 @@ const closeLeaderboard = document.querySelector('.close-leaderboard');
 function updateLeaderboard() {
     const leaderboardList = document.querySelector('.leaderboard-list');
     const scores = leaderboardManager.getLeaderboard();
-    
+
     leaderboardList.innerHTML = scores.map((score, index) => `
         <div class="leaderboard-item">
             <div class="leaderboard-rank">#${index + 1}</div>
@@ -695,7 +759,7 @@ function showGameTransition(isGoingBack = false) {
 
     transitionText.textContent = isGoingBack ? 'Đang rời game...' : 'Đang vào game...';
     transitionScreen.style.display = 'flex';
-    
+
     if (isGoingBack) {
         container.style.display = 'none';
         SOUNDS.background.pause();
@@ -733,36 +797,134 @@ backToSelectButton.addEventListener('click', () => {
 // Add styles for the close button
 const style = document.createElement('style');
 style.textContent = `
-    .challenges-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 15px;
+    .notification-popup {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(255, 245, 247, 0.95);
+        border-radius: 20px;
+        padding: 25px;
+        box-shadow: 0 4px 15px rgba(255, 105, 180, 0.2);
+        z-index: 1000;
+        text-align: center;
+        animation: popIn 0.5s ease-out;
+        border: 2px solid #ffd1dc;
+        max-width: 90%;
+        width: 300px;
     }
-    
+
+    .notification-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .notification-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 5px;
+    }
+
+    .notification-header i {
+        font-size: 2rem;
+        color: #ff69b4;
+    }
+
+    .notification-header h3 {
+        color: #ff69b4;
+        font-size: 1.5rem;
+        margin: 0;
+        font-weight: bold;
+    }
+
+    .notification-popup p {
+        color: #ff69b4;
+        margin: 0;
+        font-size: 1.1rem;
+        line-height: 1.4;
+    }
+
+    .notification-rewards {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin: 10px 0;
+        width: 100%;
+    }
+
+    .reward-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        background: rgba(255, 182, 193, 0.1);
+        border-radius: 12px;
+        border: 1px solid #ffb6c1;
+    }
+
+    .reward-item i {
+        font-size: 1.1rem;
+        color: #ff69b4;
+    }
+
+    .reward-item span {
+        color: #ff69b4;
+        font-size: 0.95rem;
+    }
+        
     .close-challenges {
         background: none;
+
+    .notification-close {
+        background: #ff69b4;
+        color: white;
         border: none;
-        color: #ff69b4;
-        font-size: 1.2rem;
+        padding: 8px 20px;
+        border-radius: 15px;
+        font-family: 'Comic Sans MS', cursive, sans-serif;
+        font-size: 1rem;
         cursor: pointer;
-        padding: 5px;
-        transition: transform 0.3s ease;
+        margin-top: 5px;
+        transition: background-color 0.3s ease;
     }
-    
-    .close-challenges:hover {
-        transform: rotate(90deg);
+
+    .notification-close:hover {
+        background: #ff1493;
+    }
+
+    @keyframes popIn {
+        0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+        100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
+
+    .level-up-popup {
+        border-color: #ffd700;
+    }
+
+    .level-up-popup .notification-header i {
+        color: #ffd700;
+    }
+
+    .challenge-popup {
+        border-color: #ff69b4;
+    }
+
+    .challenge-popup .notification-header i {
+        color: #ff69b4;
     }
 `;
 document.head.appendChild(style);
 
-createBoxes();
+createBoxes(); 
 
 // Add after the currentGameState initialization
 function updateLevelDisplay() {
     const levelDisplay = document.querySelector('.level-display span');
     const experienceBar = document.querySelector('.experience-progress');
-    
+
     levelDisplay.textContent = `Level: ${currentGameState.level}`;
     const progress = (currentGameState.experience / currentGameState.experienceToNextLevel) * 100;
     experienceBar.style.width = `${progress}%`;
@@ -770,20 +932,31 @@ function updateLevelDisplay() {
 
 function addExperience(amount) {
     currentGameState.experience += amount;
+    const pendingLevelUps = [];
+
     while (currentGameState.experience >= currentGameState.experienceToNextLevel) {
         currentGameState.experience -= currentGameState.experienceToNextLevel;
         currentGameState.level++;
-        currentGameState.experienceToNextLevel = Math.floor(currentGameState.experienceToNextLevel * 1.5);
-        showLevelUp();
+        pendingLevelUps.push(currentGameState.level);
+        currentGameState.experienceToNextLevel = Math.floor(currentGameState.experienceToNextLevel * 1.4);
     }
+
     updateLevelDisplay();
     saveGameState();
+
+    // If there are pending level ups, show them one by one
+    if (pendingLevelUps.length > 0) {
+        currentGameState.pendingLevelUps = pendingLevelUps;
+        const firstLevel = pendingLevelUps.shift();
+        currentGameState.level = firstLevel;
+        showLevelUp();
+    }
 }
 
 function createConfetti() {
     const effect = document.createElement('div');
     effect.className = 'level-up-effect';
-    
+
     for (let i = 0; i < 50; i++) {
         const confetti = document.createElement('div');
         confetti.className = 'confetti';
@@ -792,27 +965,54 @@ function createConfetti() {
         confetti.style.animationDelay = `${Math.random() * 2}s`;
         effect.appendChild(confetti);
     }
-    
+
     document.body.appendChild(effect);
     setTimeout(() => effect.remove(), 2000);
 }
 
 function showLevelUp() {
     const levelUpPopup = document.createElement('div');
-    levelUpPopup.className = 'challenge-complete';
+    levelUpPopup.className = 'notification-popup level-up-popup';
     levelUpPopup.innerHTML = `
-        <i class="fas fa-star"></i>
-        <h3>Level Up!</h3>
-        <p>Chúc mừng bạn đã lên cấp ${currentGameState.level}!</p>
+        <div class="notification-content">
+            <div class="notification-header">
+                <i class="fas fa-star"></i>
+                <h3>Level Up!</h3>
+            </div>
+            <p>Chúc mừng bạn đã lên cấp ${currentGameState.level}!</p>
+            <div class="notification-rewards">
+                <div class="reward-item">
+                    <i class="fas fa-gift"></i>
+                    <span>Hộp quà đặc biệt x1</span>
+                </div>
+                <div class="reward-item">
+                    <i class="fas fa-coins"></i>
+                    <span>+100 điểm</span>
+                </div>
+                <div class="reward-item">
+                    <i class="fas fa-star"></i>
+                    <span>+50 exp</span>
+                </div>
+            </div>
+            <button class="notification-close">Đóng</button>
+        </div>
     `;
-    
-    document.body.appendChild(levelUpPopup);
+
+    document.querySelector('.game-select-screen').appendChild(levelUpPopup);
     createConfetti();
     playSound('rare', 0.5);
-    
-    setTimeout(() => {
+
+    // Add close button functionality
+    const closeButton = levelUpPopup.querySelector('.notification-close');
+    closeButton.addEventListener('click', () => {
         levelUpPopup.remove();
-    }, 3000);
+        // Check if there are more level ups to show
+        if (currentGameState.pendingLevelUps && currentGameState.pendingLevelUps.length > 0) {
+            const nextLevel = currentGameState.pendingLevelUps.shift();
+            currentGameState.level = nextLevel;
+            showLevelUp();
+        }
+    });
 }
 
 function saveGameState() {
@@ -833,15 +1033,15 @@ function loadGameState() {
     const savedState = localStorage.getItem(`gameState_${currentGameState.playerName}`);
     if (savedState) {
         const gameState = JSON.parse(savedState);
-        currentGameState.level = gameState.level;
-        currentGameState.experience = gameState.experience;
-        currentGameState.experienceToNextLevel = gameState.experienceToNextLevel;
+        currentGameState.level = gameState.level || 1;
+        currentGameState.experience = gameState.experience || 0;
+        currentGameState.experienceToNextLevel = gameState.experienceToNextLevel || 100;
         currentGameState.currentScore = gameState.currentScore || 0;
         currentGameState.dailyChallenges = gameState.dailyChallenges || { ...DAILY_CHALLENGES };
         currentGameState.lastPlayDate = gameState.lastPlayDate;
         currentGameState.unlockedTeddies = gameState.unlockedTeddies || {};
         currentGameState.teddyCounts = gameState.teddyCounts || {};
-        
+
         // Check if it's a new day
         const today = new Date().toDateString();
         if (currentGameState.lastPlayDate !== today) {
@@ -849,7 +1049,7 @@ function loadGameState() {
             currentGameState.dailyChallenges = { ...DAILY_CHALLENGES };
             currentGameState.lastPlayDate = today;
         }
-        
+
         updateLevelDisplay();
         updateUnlockedDisplay();
         updateMovesAndScore();
@@ -857,4 +1057,12 @@ function loadGameState() {
 }
 
 // Initialize level display
-updateLevelDisplay(); 
+updateLevelDisplay();
+
+// Add reset data button functionality
+document.querySelector('.reset-data-button').addEventListener('click', () => {
+    if (confirm('Bạn có chắc chắn muốn xóa tất cả dữ liệu?')) {
+        localStorage.clear();
+        location.reload();
+    }
+}); 
