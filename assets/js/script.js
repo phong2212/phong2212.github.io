@@ -55,6 +55,19 @@ const teddies = [
     }
 ];
 
+// Score configuration for each teddy
+const TEDDY_SCORES = {
+    "Công Chúa Hồng": 100,
+    "Gấu Xanh Dâu": 150,
+    "Gấu Dâu Tây": 200,
+    "Gấu Kẹo Bông": 250,
+    "Gấu Mật Ong": 300,
+    "Gấu Cầu Vồng": 350,
+    "Gấu Kẹo Dẻo": 400,
+    "Gấu Bánh Cupcake": 450,
+    "Kỳ Lân Vàng": 1000 // Secret bear
+};
+
 const SOUNDS = {
     background: new Audio('assets/sound/background.mp3'),
     click: new Audio('assets/sound/click.mp3'),
@@ -95,10 +108,9 @@ let currentGameState = {
     lastPlayDate: null,
     level: 1,
     experience: 0,
-    experienceToNextLevel: 100
+    experienceToNextLevel: 100,
+    previousScore: null // Add previous score tracking
 };
-
-const leaderboardManager = new LeaderboardManager();
 
 // Loading screen animation
 const loadingScreen = document.querySelector('.loading-screen');
@@ -170,7 +182,7 @@ nameInput.addEventListener('input', (e) => {
 // Update handleKeyClick function
 function handleKeyClick(key) {
     const keyContent = key.textContent.toUpperCase();
-
+    
     // Add active class for animation
     key.classList.add('active');
     setTimeout(() => key.classList.remove('active'), 200);
@@ -207,19 +219,83 @@ function updateMovesAndScore() {
     document.querySelector('.current-score').textContent = `Điểm: ${currentGameState.currentScore}`;
 }
 
+// Game state management
+const gameStates = {
+    teddy: {
+        element: document.querySelector('.container'),
+        isActive: false,
+        events: []
+    },
+    memory: {
+        element: null, // Will be set when memory game is initialized
+        isActive: false,
+        events: []
+    },
+    dash: {
+        element: null, // Will be set when dash game is initialized
+        isActive: false,
+        events: []
+    }
+};
+
+function initializeGameStates() {
+    // Hide all game containers initially
+    Object.values(gameStates).forEach(state => {
+        if (state.element) {
+            state.element.style.display = 'none';
+        }
+    });
+}
+
+function activateGame(gameType) {
+    // Deactivate all games first
+    Object.keys(gameStates).forEach(key => {
+        if (key !== gameType) {
+            deactivateGame(key);
+        }
+    });
+
+    // Activate the selected game
+    const gameState = gameStates[gameType];
+    if (gameState) {
+        gameState.isActive = true;
+        if (gameState.element) {
+            gameState.element.style.display = 'block';
+        }
+    }
+}
+
+function deactivateGame(gameType) {
+    const gameState = gameStates[gameType];
+    if (gameState) {
+        gameState.isActive = false;
+        if (gameState.element) {
+            gameState.element.style.display = 'none';
+        }
+        // Remove all event listeners
+        gameState.events.forEach(event => {
+            event.target.removeEventListener(event.type, event.listener);
+        });
+        gameState.events = [];
+    }
+}
+
 function startGame() {
     const playerName = nameInput.value.trim().toUpperCase();
     if (playerName) {
-        const isExistingPlayer = leaderboardManager.isNameTaken(playerName);
         currentGameState.playerName = playerName;
-        loadGameState();
-
-        // Start background music
-        playSound('background', 0.3);
-
-        // Hide name screen and show game selection
+        // Save the player name to localStorage
+        localStorage.setItem('lastPlayerName', playerName);
+        
+        // First show game selection screen and initialize everything
+        const gameSelectScreen = document.querySelector('.game-select-screen');
+        gameSelectScreen.style.display = 'flex';
         document.querySelector('.name-screen').style.display = 'none';
-        document.querySelector('.game-select-screen').style.display = 'flex';
+        
+        // Initialize game states and load data
+        loadGameState();
+        playSound('background', 0.3);
+        initializeGameStates();
 
         // Add click handlers for game cards
         document.querySelectorAll('.game-card').forEach(card => {
@@ -228,47 +304,37 @@ function startGame() {
                 const gameType = card.dataset.game;
                 if (gameType === 'teddy') {
                     showGameTransition();
+                    activateGame('teddy');
+                } else if (gameType === 'memory') {
+                    if (!memoryMatch) {
+                        memoryMatch = new MemoryMatch();
+                        gameStates.memory.element = memoryMatch.element;
+                    }
+                    activateGame('memory');
+                    memoryMatch.show();
+                } else if (gameType === 'dash') {
+                    if (!birthdayDash) {
+                        birthdayDash = new BirthdayDash();
+                        gameStates.dash.element = birthdayDash.element;
+                    }
+                    activateGame('dash');
+                    birthdayDash.show();
                 }
             });
         });
 
-        if (isExistingPlayer) {
-            showWelcomeBackMessage(playerName);
-        }
         updateDailyChallenges();
+        
+        // Show welcome message for new player after everything is initialized
+        setTimeout(() => {
+            showWelcomeMessage(false);
+        }, 100);
     }
-}
-
-function showWelcomeBackMessage(playerName) {
-    const welcomeBack = document.createElement('div');
-    welcomeBack.className = 'game-over'; // Reusing the game-over style
-    welcomeBack.innerHTML = `
-        <div class="game-over-content">
-            <h2>Chào mừng trở lại!</h2>
-            <p>Chúc ${playerName} chơi vui vẻ!</p>
-            <div class="game-over-buttons">
-                <button class="game-over-button close">OK</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(welcomeBack);
-
-    const closeButton = welcomeBack.querySelector('.close');
-    closeButton.addEventListener('click', () => {
-        welcomeBack.remove();
-    });
-
-    // Auto-close after 2 seconds
-    setTimeout(() => {
-        if (document.body.contains(welcomeBack)) {
-            welcomeBack.remove();
-        }
-    }, 2000);
 }
 
 function startLoadingAnimation() {
     let progress = 0;
-
+    
     // First phase: 0% to 20% in 2s
     const firstPhase = setInterval(() => {
         progress += 1;
@@ -311,7 +377,7 @@ function startLoadingAnimation() {
     function updateProgress(value) {
         progressBar.style.width = `${value}%`;
         progressText.textContent = `${value}%`;
-
+        
         // Calculate bear position based on scene width
         const sceneWidth = loadingScene.offsetWidth;
         const bearWidth = loadingBear.offsetWidth;
@@ -324,13 +390,60 @@ function startLoadingAnimation() {
 // Hide the main container initially
 document.querySelector('.container').style.display = 'none';
 
-// Start loading animation when page loads
+// Modify window load event listener
 window.addEventListener('load', () => {
     const lastPlayerName = localStorage.getItem('lastPlayerName');
     if (lastPlayerName) {
+        // Skip loading and name screens if there's a saved name
         currentGameState.playerName = lastPlayerName;
+        loadingScreen.style.display = 'none';
+        nameScreen.style.display = 'none';
+        
+        // First show game selection screen and initialize everything
+        const gameSelectScreen = document.querySelector('.game-select-screen');
+        gameSelectScreen.style.display = 'flex';
+        
+        // Initialize game states and load data
+        loadGameState();
+        playSound('background', 0.3);
+        initializeGameStates();
+        
+        // Add click handlers for game cards
+        document.querySelectorAll('.game-card').forEach(card => {
+            card.addEventListener('click', () => {
+                playSound('click');
+                const gameType = card.dataset.game;
+                if (gameType === 'teddy') {
+                    showGameTransition();
+                    activateGame('teddy');
+                } else if (gameType === 'memory') {
+                    if (!memoryMatch) {
+                        memoryMatch = new MemoryMatch();
+                        gameStates.memory.element = memoryMatch.element;
+                    }
+                    activateGame('memory');
+                    memoryMatch.show();
+                } else if (gameType === 'dash') {
+                    if (!birthdayDash) {
+                        birthdayDash = new BirthdayDash();
+                        gameStates.dash.element = birthdayDash.element;
+                    }
+                    activateGame('dash');
+                    birthdayDash.show();
+                }
+            });
+        });
+
+        updateDailyChallenges();
+        
+        // Show welcome back message after everything is initialized
+        setTimeout(() => {
+            showWelcomeMessage(true);
+        }, 100);
+    } else {
+        // Show loading screen and name input for new players
+        startLoadingAnimation();
     }
-    startLoadingAnimation();
 });
 
 function createBoxes() {
@@ -387,30 +500,30 @@ function updateUnlockedDisplay() {
         if (teddy) {
         const unlockedItem = document.createElement('div');
             unlockedItem.className = `unlocked-item ${teddy.rarity === 'rare' ? 'shiny' : ''}`;
-
+            
             const teddyInfo = document.createElement('div');
             teddyInfo.className = 'teddy-info';
-
+            
             const nameSpan = document.createElement('span');
             nameSpan.className = 'teddy-name';
             nameSpan.textContent = name;
-
+            
             const scoreSpan = document.createElement('span');
             scoreSpan.className = 'teddy-score';
             scoreSpan.textContent = `+${TEDDY_SCORES[name]} điểm`;
-
+            
             teddyInfo.appendChild(nameSpan);
             teddyInfo.appendChild(scoreSpan);
-
+            
             unlockedItem.appendChild(teddyInfo);
-
+            
             if (count > 1) {
                 const countSpan = document.createElement('span');
                 countSpan.className = 'teddy-count show';
                 countSpan.textContent = `x${count}`;
                 unlockedItem.appendChild(countSpan);
             }
-
+            
         unlockedContainer.appendChild(unlockedItem);
         }
     });
@@ -456,7 +569,7 @@ function showDailyChallenges() {
             `).join('')}
         </div>
     `;
-
+    
     document.body.appendChild(challengesContainer);
 
     // Add close button functionality
@@ -521,7 +634,7 @@ function unboxTeddy(index) {
             showChallengeComplete('collectRare');
         }
 
-        if (Object.keys(currentGameState.teddyCounts).length >= 3 &&
+        if (Object.keys(currentGameState.teddyCounts).length >= 3 && 
             !currentGameState.dailyChallenges.collectAll.completed) {
             currentGameState.dailyChallenges.collectAll.completed = true;
             currentGameState.currentScore += currentGameState.dailyChallenges.collectAll.reward;
@@ -569,32 +682,30 @@ function unboxTeddy(index) {
 function showChallengeComplete(challengeKey) {
     const challenge = currentGameState.dailyChallenges[challengeKey];
     const completionPopup = document.createElement('div');
-    completionPopup.className = 'notification-popup challenge-popup';
+    completionPopup.className = 'challenge-complete';
     completionPopup.innerHTML = `
-        <div class="notification-content">
-            <div class="notification-header">
-                <i class="fas fa-check-circle"></i>
-                <h3>Hoàn Thành!</h3>
-            </div>
+        <div class="challenge-content">
+            <i class="fas fa-star"></i>
+            <h3>Hoàn Thành Thử Thách!</h3>
             <p>${challenge.description}</p>
-            <div class="notification-rewards">
+            <div class="challenge-rewards">
                 <div class="reward-item">
                     <i class="fas fa-star"></i>
-                    <span>+${challenge.reward} điểm</span>
+                    <span>+${challenge.reward} exp</span>
                 </div>
             </div>
-            <button class="notification-close">Đóng</button>
+            <button class="close-challenge">Đóng</button>
         </div>
     `;
-
+    
     document.body.appendChild(completionPopup);
     playSound('rare', 0.5);
-
+    
     // Add experience equal to the challenge reward
     addExperience(challenge.reward);
-
+    
     // Add close button functionality
-    const closeButton = completionPopup.querySelector('.notification-close');
+    const closeButton = completionPopup.querySelector('.close-challenge');
     closeButton.addEventListener('click', () => {
         completionPopup.remove();
     });
@@ -604,17 +715,14 @@ function showGameOver() {
     const gameOver = document.createElement('div');
     gameOver.className = 'game-over';
 
-    // Add score to leaderboard and get the entry with previous score info
-    const scoreEntry = leaderboardManager.addScore(
-        currentGameState.playerName,
-        currentGameState.currentScore,
-        Object.keys(currentGameState.unlockedTeddies)
-    );
+    // Store previous score before updating
+    const previousScore = currentGameState.previousScore;
+    currentGameState.previousScore = currentGameState.currentScore;
 
     // Prepare score change message
     let scoreChangeMsg = '';
-    if (scoreEntry.previousScore !== null) {
-        const scoreDiff = currentGameState.currentScore - scoreEntry.previousScore;
+    if (previousScore !== null) {
+        const scoreDiff = currentGameState.currentScore - previousScore;
         if (scoreDiff > 0) {
             scoreChangeMsg = `<p class="score-change positive">+${scoreDiff} điểm so với lần trước!</p>`;
         } else if (scoreDiff < 0) {
@@ -719,38 +827,6 @@ document.getElementById('restartButton').addEventListener('click', () => {
     playSound('click');
 });
 
-// Leaderboard functionality
-const leaderboardButton = document.querySelector('.leaderboard-button');
-const leaderboardPanel = document.querySelector('.leaderboard-panel');
-const closeLeaderboard = document.querySelector('.close-leaderboard');
-
-function updateLeaderboard() {
-    const leaderboardList = document.querySelector('.leaderboard-list');
-    const scores = leaderboardManager.getLeaderboard();
-
-    leaderboardList.innerHTML = scores.map((score, index) => `
-        <div class="leaderboard-item">
-            <div class="leaderboard-rank">#${index + 1}</div>
-            <div class="leaderboard-info">
-                <div class="leaderboard-name">${score.playerName}</div>
-                <div class="leaderboard-score">Điểm: ${score.score}</div>
-                <div class="leaderboard-date">${score.date}</div>
-            </div>
-        </div>
-    `).join('');
-}
-
-leaderboardButton.addEventListener('click', () => {
-    playSound('click');
-    updateLeaderboard();
-    leaderboardPanel.style.display = 'flex';
-});
-
-closeLeaderboard.addEventListener('click', () => {
-    playSound('click');
-    leaderboardPanel.style.display = 'none';
-});
-
 function showGameTransition(isGoingBack = false) {
     const transitionScreen = document.querySelector('.game-transition');
     const transitionText = transitionScreen.querySelector('.game-transition-text');
@@ -759,7 +835,7 @@ function showGameTransition(isGoingBack = false) {
 
     transitionText.textContent = isGoingBack ? 'Đang rời game...' : 'Đang vào game...';
     transitionScreen.style.display = 'flex';
-
+    
     if (isGoingBack) {
         container.style.display = 'none';
         SOUNDS.background.pause();
@@ -790,130 +866,35 @@ dailyChallengesButton.addEventListener('click', () => {
 
 // Add click handler for back button
 backToSelectButton.addEventListener('click', () => {
-    playSound('click');
-    showGameTransition(true); // true indicates going back to select screen
+    const activeGame = Object.keys(gameStates).find(key => gameStates[key].isActive);
+    if (activeGame) {
+        deactivateGame(activeGame);
+        showGameTransition(true);
+    }
 });
 
 // Add styles for the close button
 const style = document.createElement('style');
 style.textContent = `
-    .notification-popup {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: rgba(255, 245, 247, 0.95);
-        border-radius: 20px;
-        padding: 25px;
-        box-shadow: 0 4px 15px rgba(255, 105, 180, 0.2);
-        z-index: 1000;
-        text-align: center;
-        animation: popIn 0.5s ease-out;
-        border: 2px solid #ffd1dc;
-        max-width: 90%;
-        width: 300px;
-    }
-
-    .notification-content {
+    .challenges-header {
         display: flex;
-        flex-direction: column;
+        justify-content: space-between;
         align-items: center;
-        gap: 15px;
+        margin-bottom: 15px;
     }
-
-    .notification-header {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 5px;
-    }
-
-    .notification-header i {
-        font-size: 2rem;
-        color: #ff69b4;
-    }
-
-    .notification-header h3 {
-        color: #ff69b4;
-        font-size: 1.5rem;
-        margin: 0;
-        font-weight: bold;
-    }
-
-    .notification-popup p {
-        color: #ff69b4;
-        margin: 0;
-        font-size: 1.1rem;
-        line-height: 1.4;
-    }
-
-    .notification-rewards {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        margin: 10px 0;
-        width: 100%;
-    }
-
-    .reward-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 8px 12px;
-        background: rgba(255, 182, 193, 0.1);
-        border-radius: 12px;
-        border: 1px solid #ffb6c1;
-    }
-
-    .reward-item i {
-        font-size: 1.1rem;
-        color: #ff69b4;
-    }
-
-    .reward-item span {
-        color: #ff69b4;
-        font-size: 0.95rem;
-    }
-        
+    
     .close-challenges {
         background: none;
-
-    .notification-close {
-        background: #ff69b4;
-        color: white;
         border: none;
-        padding: 8px 20px;
-        border-radius: 15px;
-        font-family: 'Comic Sans MS', cursive, sans-serif;
-        font-size: 1rem;
-        cursor: pointer;
-        margin-top: 5px;
-        transition: background-color 0.3s ease;
-    }
-
-    .notification-close:hover {
-        background: #ff1493;
-    }
-
-    @keyframes popIn {
-        0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
-        100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-    }
-
-    .level-up-popup {
-        border-color: #ffd700;
-    }
-
-    .level-up-popup .notification-header i {
-        color: #ffd700;
-    }
-
-    .challenge-popup {
-        border-color: #ff69b4;
-    }
-
-    .challenge-popup .notification-header i {
         color: #ff69b4;
+        font-size: 1.2rem;
+        cursor: pointer;
+        padding: 5px;
+        transition: transform 0.3s ease;
+    }
+    
+    .close-challenges:hover {
+        transform: rotate(90deg);
     }
 `;
 document.head.appendChild(style);
@@ -924,7 +905,7 @@ createBoxes();
 function updateLevelDisplay() {
     const levelDisplay = document.querySelector('.level-display span');
     const experienceBar = document.querySelector('.experience-progress');
-
+    
     levelDisplay.textContent = `Level: ${currentGameState.level}`;
     const progress = (currentGameState.experience / currentGameState.experienceToNextLevel) * 100;
     experienceBar.style.width = `${progress}%`;
@@ -933,14 +914,14 @@ function updateLevelDisplay() {
 function addExperience(amount) {
     currentGameState.experience += amount;
     const pendingLevelUps = [];
-
+    
     while (currentGameState.experience >= currentGameState.experienceToNextLevel) {
         currentGameState.experience -= currentGameState.experienceToNextLevel;
         currentGameState.level++;
         pendingLevelUps.push(currentGameState.level);
         currentGameState.experienceToNextLevel = Math.floor(currentGameState.experienceToNextLevel * 1.4);
     }
-
+    
     updateLevelDisplay();
     saveGameState();
 
@@ -956,7 +937,7 @@ function addExperience(amount) {
 function createConfetti() {
     const effect = document.createElement('div');
     effect.className = 'level-up-effect';
-
+    
     for (let i = 0; i < 50; i++) {
         const confetti = document.createElement('div');
         confetti.className = 'confetti';
@@ -965,45 +946,43 @@ function createConfetti() {
         confetti.style.animationDelay = `${Math.random() * 2}s`;
         effect.appendChild(confetti);
     }
-
+    
     document.body.appendChild(effect);
     setTimeout(() => effect.remove(), 2000);
 }
 
 function showLevelUp() {
     const levelUpPopup = document.createElement('div');
-    levelUpPopup.className = 'notification-popup level-up-popup';
+    levelUpPopup.className = 'challenge-complete level-up-popup';
     levelUpPopup.innerHTML = `
-        <div class="notification-content">
-            <div class="notification-header">
-                <i class="fas fa-star"></i>
-                <h3>Level Up!</h3>
-            </div>
+        <div class="challenge-content">
+            <i class="fas fa-star"></i>
+            <h3>Level Up!</h3>
             <p>Chúc mừng bạn đã lên cấp ${currentGameState.level}!</p>
-            <div class="notification-rewards">
+            <div class="challenge-rewards">
                 <div class="reward-item">
                     <i class="fas fa-gift"></i>
                     <span>Hộp quà đặc biệt x1</span>
                 </div>
                 <div class="reward-item">
                     <i class="fas fa-coins"></i>
-                    <span>+100 điểm</span>
+                    <span>+100 xu</span>
                 </div>
                 <div class="reward-item">
                     <i class="fas fa-star"></i>
                     <span>+50 exp</span>
                 </div>
             </div>
-            <button class="notification-close">Đóng</button>
+            <button class="close-challenge">Đóng</button>
         </div>
     `;
-
+    
     document.querySelector('.game-select-screen').appendChild(levelUpPopup);
     createConfetti();
     playSound('rare', 0.5);
 
     // Add close button functionality
-    const closeButton = levelUpPopup.querySelector('.notification-close');
+    const closeButton = levelUpPopup.querySelector('.close-challenge');
     closeButton.addEventListener('click', () => {
         levelUpPopup.remove();
         // Check if there are more level ups to show
@@ -1021,6 +1000,7 @@ function saveGameState() {
         experience: currentGameState.experience,
         experienceToNextLevel: currentGameState.experienceToNextLevel,
         currentScore: currentGameState.currentScore,
+        previousScore: currentGameState.previousScore,
         dailyChallenges: currentGameState.dailyChallenges,
         lastPlayDate: currentGameState.lastPlayDate,
         unlockedTeddies: currentGameState.unlockedTeddies,
@@ -1037,11 +1017,12 @@ function loadGameState() {
         currentGameState.experience = gameState.experience || 0;
         currentGameState.experienceToNextLevel = gameState.experienceToNextLevel || 100;
         currentGameState.currentScore = gameState.currentScore || 0;
+        currentGameState.previousScore = gameState.previousScore || null;
         currentGameState.dailyChallenges = gameState.dailyChallenges || { ...DAILY_CHALLENGES };
         currentGameState.lastPlayDate = gameState.lastPlayDate;
         currentGameState.unlockedTeddies = gameState.unlockedTeddies || {};
         currentGameState.teddyCounts = gameState.teddyCounts || {};
-
+        
         // Check if it's a new day
         const today = new Date().toDateString();
         if (currentGameState.lastPlayDate !== today) {
@@ -1049,7 +1030,7 @@ function loadGameState() {
             currentGameState.dailyChallenges = { ...DAILY_CHALLENGES };
             currentGameState.lastPlayDate = today;
         }
-
+        
         updateLevelDisplay();
         updateUnlockedDisplay();
         updateMovesAndScore();
@@ -1065,4 +1046,96 @@ document.querySelector('.reset-data-button').addEventListener('click', () => {
         localStorage.clear();
         location.reload();
     }
-}); 
+});
+
+// Initialize games
+let memoryMatch = null;
+let birthdayDash = null;
+
+// Add welcome message function
+function showWelcomeMessage(isReturningPlayer) {
+    const welcomeMessage = document.createElement('div');
+    welcomeMessage.className = 'welcome-message';
+    welcomeMessage.innerHTML = `
+        <div class="welcome-content">
+            <i class="fas ${isReturningPlayer ? 'fa-heart' : 'fa-star'}"></i>
+            <h2>${isReturningPlayer ? 'Chào mừng trở lại!' : 'Chào mừng bạn đến với Birthday Game Collection!'}</h2>
+            <p>${isReturningPlayer ? `Xin chào ${currentGameState.playerName}! Chúc bạn chơi game vui vẻ!` : 'Hãy bắt đầu cuộc phiêu lưu của bạn!'}</p>
+            <button class="close-welcome">Bắt đầu</button>
+        </div>
+    `;
+    
+    document.querySelector('.game-select-screen').appendChild(welcomeMessage);
+    playSound('click', 0.5);
+
+    // Add close button functionality
+    const closeButton = welcomeMessage.querySelector('.close-welcome');
+    closeButton.addEventListener('click', () => {
+        welcomeMessage.remove();
+    });
+}
+
+// Add styles for welcome message
+const welcomeStyle = document.createElement('style');
+welcomeStyle.textContent = `
+    .welcome-message {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        animation: fadeIn 0.5s ease;
+    }
+
+    .welcome-content {
+        background: white;
+        padding: 2rem;
+        border-radius: 1rem;
+        text-align: center;
+        max-width: 90%;
+        width: 400px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .welcome-content i {
+        font-size: 3rem;
+        color: #ff69b4;
+        margin-bottom: 1rem;
+    }
+
+    .welcome-content h2 {
+        color: #333;
+        margin-bottom: 1rem;
+    }
+
+    .welcome-content p {
+        color: #666;
+        margin-bottom: 1.5rem;
+    }
+
+    .close-welcome {
+        background: #ff69b4;
+        color: white;
+        border: none;
+        padding: 0.8rem 2rem;
+        border-radius: 2rem;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+
+    .close-welcome:hover {
+        transform: scale(1.05);
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+`;
+document.head.appendChild(welcomeStyle); 
