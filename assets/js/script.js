@@ -546,7 +546,8 @@ function updateDailyChallenges() {
     }
 }
 
-function showDailyChallenges() {
+// Make showDailyChallenges function globally accessible
+window.showDailyChallenges = function() {
     const existingChallenges = document.querySelector('.daily-challenges');
     if (existingChallenges) {
         existingChallenges.remove();
@@ -571,6 +572,8 @@ function showDailyChallenges() {
     `;
     
     document.body.appendChild(challengesContainer);
+    challengesContainer.classList.add('show');
+    playSound('click', 0.5);
 
     // Add close button functionality
     const closeButton = challengesContainer.querySelector('.close-challenges');
@@ -578,7 +581,7 @@ function showDailyChallenges() {
         playSound('click');
         challengesContainer.remove();
     });
-}
+};
 
 function unboxTeddy(index) {
     if (currentGameState.hasPicked || currentGameState.movesLeft <= 0) return;
@@ -612,10 +615,20 @@ function unboxTeddy(index) {
         teddyDescription.classList.add('secret');
         // Only add experience for rare teddies
         addExperience(20);
+        
+        // Add money for rare teddies
+        if (window.zodiacSystem) {
+            window.zodiacSystem.addMoney(50);
+        }
     } else {
         playSound('common', 0.6);
         teddyName.classList.remove('secret');
         teddyDescription.classList.remove('secret');
+        
+        // Add money for common teddies
+        if (window.zodiacSystem) {
+            window.zodiacSystem.addMoney(10);
+        }
     }
 
     playSound('click', 0.5);
@@ -719,6 +732,26 @@ function showGameOver() {
     const previousScore = currentGameState.previousScore;
     currentGameState.previousScore = currentGameState.currentScore;
 
+    // Calculate coins based on score
+    const coinsGained = Math.floor(currentGameState.currentScore / 400) * 5;
+
+    // Add coins to zodiac system
+    if (window.zodiacSystem) {
+        window.zodiacSystem.addMoney(coinsGained);
+    }
+
+    // Check for zodiac card reward
+    let zodiacReward = null;
+    if (window.zodiacSystem) {
+        const randomZodiac = window.zodiacSystem.zodiacSigns[Math.floor(Math.random() * window.zodiacSystem.zodiacSigns.length)];
+        if (Math.random() < randomZodiac.rate) {
+            window.zodiacSystem.collectedZodiacs[randomZodiac.id - 1]++;
+            window.zodiacSystem.updateZodiacDisplay();
+            window.zodiacSystem.saveData();
+            zodiacReward = randomZodiac.name;
+        }
+    }
+
     // Prepare score change message
     let scoreChangeMsg = '';
     if (previousScore !== null) {
@@ -738,6 +771,8 @@ function showGameOver() {
             <p>Tên người chơi: ${currentGameState.playerName}</p>
             <p>Điểm của bạn: ${currentGameState.currentScore}</p>
             ${scoreChangeMsg}
+            <p class="exp-gained">+${coinsGained} xu</p>
+            ${zodiacReward ? `<p class="exp-gained">+${zodiacReward}</p>` : ''}
             <div class="game-over-buttons">
                 <button class="game-over-button play-again">Chơi Lại</button>
                 <button class="game-over-button close">Đóng</button>
@@ -806,6 +841,12 @@ function resetGame() {
     }
     unboxedTeddy.style.display = 'none';
 
+    // Clear unlocked section
+    const unlockedContainer = document.querySelector('.unlocked-container');
+    if (unlockedContainer) {
+        unlockedContainer.innerHTML = '';
+    }
+
     createBoxes();
     updateMovesAndScore();
     hidePlayAgainOverlay();
@@ -835,10 +876,13 @@ function showGameTransition(isGoingBack = false) {
 
     transitionText.textContent = isGoingBack ? 'Đang rời game...' : 'Đang vào game...';
     transitionScreen.style.display = 'flex';
+    transitionScreen.style.zIndex = '9999';
     
     if (isGoingBack) {
         container.style.display = 'none';
-        SOUNDS.background.pause();
+        if (SOUNDS.background) {
+            SOUNDS.background.pause();
+        }
     } else {
         gameSelectScreen.style.display = 'none';
     }
@@ -847,6 +891,12 @@ function showGameTransition(isGoingBack = false) {
         transitionScreen.style.display = 'none';
         if (isGoingBack) {
             gameSelectScreen.style.display = 'flex';
+            // Reset any active game states
+            Object.keys(gameStates).forEach(key => {
+                if (gameStates[key].isActive) {
+                    deactivateGame(key);
+                }
+            });
         } else {
             container.style.display = 'flex';
             resetGame();
@@ -862,15 +912,6 @@ const backToSelectButton = document.querySelector('.back-to-select');
 dailyChallengesButton.addEventListener('click', () => {
     playSound('click');
     showDailyChallenges();
-});
-
-// Add click handler for back button
-backToSelectButton.addEventListener('click', () => {
-    const activeGame = Object.keys(gameStates).find(key => gameStates[key].isActive);
-    if (activeGame) {
-        deactivateGame(activeGame);
-        showGameTransition(true);
-    }
 });
 
 // Add styles for the close button
@@ -920,6 +961,11 @@ function addExperience(amount) {
         currentGameState.level++;
         pendingLevelUps.push(currentGameState.level);
         currentGameState.experienceToNextLevel = Math.floor(currentGameState.experienceToNextLevel * 1.4);
+        
+        // Add special present on level up
+        if (window.zodiacSystem) {
+            window.zodiacSystem.addSpecialPresent();
+        }
     }
     
     updateLevelDisplay();
@@ -984,6 +1030,13 @@ function showLevelUp() {
     // Add close button functionality
     const closeButton = levelUpPopup.querySelector('.close-challenge');
     closeButton.addEventListener('click', () => {
+        // Only update rewards when user closes the popup
+        if (window.zodiacSystem) {
+            window.zodiacSystem.addMoney(100);
+            window.zodiacSystem.addSpecialPresent();
+        }
+        addExperience(50);
+        
         levelUpPopup.remove();
         // Check if there are more level ups to show
         if (currentGameState.pendingLevelUps && currentGameState.pendingLevelUps.length > 0) {
@@ -1072,70 +1125,76 @@ function showWelcomeMessage(isReturningPlayer) {
     const closeButton = welcomeMessage.querySelector('.close-welcome');
     closeButton.addEventListener('click', () => {
         welcomeMessage.remove();
+        if (!isReturningPlayer) {
+            showWelcomeGift();
+        }
     });
 }
 
-// Add styles for welcome message
-const welcomeStyle = document.createElement('style');
-welcomeStyle.textContent = `
-    .welcome-message {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.8);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-        animation: fadeIn 0.5s ease;
-    }
+function showWelcomeGift() {
+    const giftPopup = document.createElement('div');
+    giftPopup.className = 'welcome-gift';
+    giftPopup.innerHTML = `
+        <div class="gift-content">
+            <div class="gift-box">
+                <img src="assets/img/present.png" alt="Hộp quà chào mừng" class="gift-image">
+            </div>
+            <p>Nhấn vào hộp quà để nhận quà chào mừng!</p>
+        </div>
+    `;
+    
+    document.querySelector('.game-select-screen').appendChild(giftPopup);
 
-    .welcome-content {
-        background: white;
-        padding: 2rem;
-        border-radius: 1rem;
-        text-align: center;
-        max-width: 90%;
-        width: 400px;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-    }
+    const giftBox = giftPopup.querySelector('.gift-box');
+    giftBox.addEventListener('click', () => {
+        // Show reward popup
+        const rewardPopup = document.createElement('div');
+        rewardPopup.className = 'challenge-complete';
+        rewardPopup.innerHTML = `
+            <div class="challenge-content">
+                <i class="fas fa-gift"></i>
+                <h3>Chúc Mừng!</h3>
+                <p>Bạn đã nhận được quà chào mừng!</p>
+                <div class="challenge-rewards">
+                    <div class="reward-item">
+                        <i class="fas fa-gift"></i>
+                        <span>Hộp quà đặc biệt x1</span>
+                    </div>
+                    <div class="reward-item">
+                        <i class="fas fa-coins"></i>
+                        <span>+100 xu</span>
+                    </div>
+                    <div class="reward-item">
+                        <i class="fas fa-star"></i>
+                        <span>+10 exp</span>
+                    </div>
+                </div>
+                <button class="close-challenge">Đóng</button>
+            </div>
+        `;
+        
+        document.body.appendChild(rewardPopup);
+        playSound('rare', 0.8);
+        confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 }
+        });
 
-    .welcome-content i {
-        font-size: 3rem;
-        color: #ff69b4;
-        margin-bottom: 1rem;
-    }
+        // Add rewards
+        if (window.zodiacSystem) {
+            window.zodiacSystem.addMoney(100);
+            window.zodiacSystem.addSpecialPresent();
+        }
+        addExperience(10);
 
-    .welcome-content h2 {
-        color: #333;
-        margin-bottom: 1rem;
-    }
+        // Remove gift popup
+        giftPopup.remove();
 
-    .welcome-content p {
-        color: #666;
-        margin-bottom: 1.5rem;
-    }
-
-    .close-welcome {
-        background: #ff69b4;
-        color: white;
-        border: none;
-        padding: 0.8rem 2rem;
-        border-radius: 2rem;
-        font-size: 1.1rem;
-        cursor: pointer;
-        transition: transform 0.3s ease;
-    }
-
-    .close-welcome:hover {
-        transform: scale(1.05);
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-`;
-document.head.appendChild(welcomeStyle); 
+        // Handle close button
+        const closeButton = rewardPopup.querySelector('.close-challenge');
+        closeButton.addEventListener('click', () => {
+            rewardPopup.remove();
+        });
+    });
+} 

@@ -20,24 +20,50 @@
         <div class="difficulty-content">
             <h2>Chọn Độ Khó</h2>
             <div class="difficulty-options">
-                <button class="difficulty-btn" data-difficulty="easy">
-                    <i class="fas fa-star"></i>
-                    <span>Dễ</span>
-                    <small>4x2</small>
-                </button>
-                <button class="difficulty-btn" data-difficulty="medium">
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                    <span>Trung Bình</span>
-                    <small>4x4</small>
-                </button>
-                <button class="difficulty-btn" data-difficulty="hard">
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                    <span>Khó</span>
-                    <small>6x4</small>
-                </button>
+                <div class="difficulty-card">
+                    <div class="difficulty-header">
+                        <h3>Level Dễ</h3>
+                        <span class="grid-size">4 x 2</span>
+                    </div>
+                    <div class="difficulty-details">
+                        <p><i class="fas fa-clock"></i> Thời gian: 0:30</p>
+                        <p><i class="fas fa-puzzle-piece"></i> Số cặp thẻ: 4</p>
+                        <p><i class="fas fa-star"></i> Exp thưởng: 5</p>
+                    </div>
+                    <button class="difficulty-btn" data-difficulty="easy">
+                        <i class="fas fa-play"></i> Bắt đầu
+                    </button>
+                </div>
+
+                <div class="difficulty-card">
+                    <div class="difficulty-header">
+                        <h3>Level Trung Bình</h3>
+                        <span class="grid-size">4 x 4</span>
+                    </div>
+                    <div class="difficulty-details">
+                        <p><i class="fas fa-clock"></i> Thời gian: 0:30</p>
+                        <p><i class="fas fa-puzzle-piece"></i> Số cặp thẻ: 8</p>
+                        <p><i class="fas fa-star"></i> Exp thưởng: 10</p>
+                    </div>
+                    <button class="difficulty-btn" data-difficulty="medium">
+                        <i class="fas fa-play"></i> Bắt đầu
+                    </button>
+                </div>
+
+                <div class="difficulty-card">
+                    <div class="difficulty-header">
+                        <h3>Level Khó</h3>
+                        <span class="grid-size">6 x 4</span>
+                    </div>
+                    <div class="difficulty-details">
+                        <p><i class="fas fa-clock"></i> Thời gian: 0:30</p>
+                        <p><i class="fas fa-puzzle-piece"></i> Số cặp thẻ: 12</p>
+                        <p><i class="fas fa-star"></i> Exp thưởng: 15</p>
+                    </div>
+                    <button class="difficulty-btn" data-difficulty="hard">
+                        <i class="fas fa-play"></i> Bắt đầu
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -73,14 +99,8 @@
                     <p>Lượt: <span class="final-moves">0</span></p>
                     <p>Điểm: <span class="final-score">0</span></p>
                 </div>
-                <div class="rewards">
-                    <div class="new-teddy">
-                        <img src="" alt="Gấu bông mới">
-                        <p>Gấu bông mới!</p>
-                    </div>
-                </div>
-                <button class="next-level">
-                    <i class="fas fa-arrow-right"></i> Level Tiếp Theo
+                <button class="play-again">
+                    <i class="fas fa-redo"></i> Chơi Lại
                 </button>
             </div>
         </div>
@@ -88,5 +108,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <script src="./assets/js/memory.js"></script>
+    <script src="./assets/js/zodiac.js"></script>
 </body>
 </html> 
