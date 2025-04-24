@@ -279,14 +279,25 @@ class ZodiacSystem {
 
             // After initial movement, start the main spinning animation
             setTimeout(() => {
-                caseItems.style.transition = `transform ${3 + randomLoops * 0.5}s cubic-bezier(0.21, 0.53, 0.29, 0.99)`;
-                caseItems.style.transform = `translateX(-${finalPosition}px)`;
-
-                // After spinning animation completes
+                // Add a slight delay before the main animation to create tension
                 setTimeout(() => {
-                    // Show result with flip animation
-                    this.showZodiacResult(selectedZodiac, casePopup, item);
-                }, (3 + randomLoops * 0.5) * 1000);
+                    caseItems.style.transition = `transform ${3 + randomLoops * 0.5}s cubic-bezier(0.21, 0.53, 0.29, 0.99)`;
+                    caseItems.style.transform = `translateX(-${finalPosition}px)`;
+
+                    // Add a subtle glow effect to the pointer during animation
+                    const pointer = casePopup.querySelector('.case-pointer');
+                    pointer.style.boxShadow = '0 0 20px rgba(255, 215, 0, 0.5)';
+                    pointer.style.transition = 'box-shadow 0.3s ease-in-out';
+
+                    // After spinning animation completes
+                    setTimeout(() => {
+                        // Remove the glow effect
+                        pointer.style.boxShadow = 'none';
+                        
+                        // Show result with flip animation
+                        this.showZodiacResult(selectedZodiac, casePopup, item);
+                    }, (3 + randomLoops * 0.5) * 1000);
+                }, 200);
             }, 500);
         });
     }

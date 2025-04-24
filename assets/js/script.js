@@ -78,23 +78,144 @@ const SOUNDS = {
 // Set background music to loop
 SOUNDS.background.loop = true;
 
-const DAILY_CHALLENGES = {
-    collectRare: {
-        description: "Thu thập 1 gấu bông hiếm",
-        reward: 50,
-        completed: false
-    },
-    collectAll: {
+// All possible daily challenges
+const ALL_DAILY_CHALLENGES = [
+    {
+        id: 'collectAll',
         description: "Thu thập 3 gấu bông khác nhau",
         reward: 30,
-        completed: false
+        type: 'teddy',
+        condition: (state) => Object.keys(state.teddyCounts).length >= 3
     },
-    highScore: {
+    {
+        id: 'highScore',
         description: "Đạt được 100 điểm",
         reward: 40,
-        completed: false
+        type: 'teddy',
+        condition: (state) => state.currentScore >= 100
+    },
+    {
+        id: 'memoryEasy',
+        description: "Hoàn thành Memory Match cấp dễ",
+        reward: 30,
+        type: 'memory',
+        condition: (state) => state.memory?.completed?.easy
+    },
+    {
+        id: 'memoryMedium',
+        description: "Hoàn thành Memory Match cấp trung bình",
+        reward: 50,
+        type: 'memory',
+        condition: (state) => state.memory?.completed?.medium
+    },
+    {
+        id: 'memoryHard',
+        description: "Hoàn thành Memory Match cấp khó",
+        reward: 80,
+        type: 'memory',
+        condition: (state) => state.memory?.completed?.hard
+    },
+    {
+        id: 'memoryPerfect',
+        description: "Hoàn thành Memory Match với 0 lượt sai",
+        reward: 100,
+        type: 'memory',
+        condition: (state) => state.memory?.perfect
+    },
+    {
+        id: 'collectZodiac',
+        description: "Thu thập 1 cung hoàng đạo mới",
+        reward: 60,
+        type: 'zodiac',
+        condition: (state) => state.newZodiacs > 0
+    },
+    {
+        id: 'collectAllZodiacs',
+        description: "Thu thập 4 cung hoàng đạo",
+        reward: 100,
+        type: 'zodiac',
+        condition: (state) => state.zodiacs?.length === 4
+    },
+    {
+        id: 'openSpecialPresent',
+        description: "Mở 1 hộp quà đặc biệt",
+        reward: 40,
+        type: 'backpack',
+        condition: (state) => state.specialPresentsOpened > 0
+    },
+    {
+        id: 'earnMoney',
+        description: "Kiếm được 100 xu",
+        reward: 30,
+        type: 'backpack',
+        condition: (state) => state.moneyEarned >= 100
+    },
+    {
+        id: 'levelUp',
+        description: "Lên cấp 1 lần",
+        reward: 50,
+        type: 'general',
+        condition: (state) => state.leveledUp
+    },
+    {
+        id: 'completeAllGames',
+        description: "Hoàn thành 1 lượt chơi của mỗi game",
+        reward: 100,
+        type: 'general',
+        condition: (state) => state.gamesCompleted?.teddy && state.gamesCompleted?.memory && state.gamesCompleted?.dash
+    },
+    {
+        id: 'collectSecret',
+        description: "Thu thập gấu bông bí mật",
+        reward: 150,
+        type: 'teddy',
+        condition: (state) => state.teddyCounts['Kỳ Lân Vàng'] > 0
+    },
+    {
+        id: 'memoryStreak',
+        description: "Hoàn thành 3 lượt Memory Match liên tiếp",
+        reward: 70,
+        type: 'memory',
+        condition: (state) => state.memory?.streak >= 3
+    },
+    {
+        id: 'collectRareZodiac',
+        description: "Thu thập 1 cung hoàng đạo hiếm",
+        reward: 80,
+        type: 'zodiac',
+        condition: (state) => state.rareZodiacsCollected > 0
+    },
+    {
+        id: 'openAllPresents',
+        description: "Mở tất cả hộp quà trong 1 lượt chơi",
+        reward: 60,
+        type: 'teddy',
+        condition: (state) => state.allBoxesOpened
+    },
+    {
+        id: 'perfectMemory',
+        description: "Hoàn thành Memory Match với thời gian còn lại > 20s",
+        reward: 90,
+        type: 'memory',
+        condition: (state) => state.memory?.timeLeft > 20
+    },
+    {
+        id: 'collectEpic',
+        description: "Thu thập 1 gấu bông siêu hiếm",
+        reward: 120,
+        type: 'teddy',
+        condition: (state) => Object.entries(state.teddyCounts).some(([name, count]) => 
+            teddies.find(t => t.name === name)?.rarity === 'epic' && count > 0
+        )
+    },
+    {
+        id: 'completeAllChallenges',
+        description: "Hoàn thành tất cả thử thách trong ngày",
+        reward: 200,
+        type: 'general',
+        condition: (state) => Object.values(state.dailyChallenges).every(challenge => challenge.completed)
     }
-};
+];
 
 let currentGameState = {
     boxes: [],
@@ -104,12 +225,30 @@ let currentGameState = {
     playerName: '',
     movesLeft: 3,
     currentScore: 0,
-    dailyChallenges: { ...DAILY_CHALLENGES },
+    dailyChallenges: {},
     lastPlayDate: null,
     level: 1,
     experience: 0,
     experienceToNextLevel: 100,
-    previousScore: null // Add previous score tracking
+    previousScore: null,
+    memory: {
+        completed: {},
+        perfect: false,
+        streak: 0,
+        timeLeft: 0
+    },
+    newZodiacs: 0,
+    zodiacs: [],
+    specialPresentsOpened: 0,
+    moneyEarned: 0,
+    leveledUp: false,
+    gamesCompleted: {
+        teddy: false,
+        memory: false,
+        dash: false
+    },
+    allBoxesOpened: false,
+    rareZodiacsCollected: 0
 };
 
 // Loading screen animation
@@ -540,7 +679,24 @@ function updateDailyChallenges() {
     const today = new Date().toDateString();
     if (currentGameState.lastPlayDate !== today) {
         // Reset challenges for new day
-        currentGameState.dailyChallenges = { ...DAILY_CHALLENGES };
+        currentGameState.dailyChallenges = {};
+        
+        // Randomly select 3 unique challenges
+        const availableChallenges = [...ALL_DAILY_CHALLENGES];
+        for (let i = 0; i < 3; i++) {
+            if (availableChallenges.length === 0) break;
+            
+            const randomIndex = Math.floor(Math.random() * availableChallenges.length);
+            const challenge = availableChallenges[randomIndex];
+            
+            currentGameState.dailyChallenges[challenge.id] = {
+                ...challenge,
+                completed: false
+            };
+            
+            availableChallenges.splice(randomIndex, 1);
+        }
+        
         currentGameState.lastPlayDate = today;
         saveGameState();
     }
@@ -640,30 +796,22 @@ function unboxTeddy(index) {
         teddyDescription.textContent = teddy.description;
         unboxedTeddy.style.display = 'block';
 
+        // Update game state for challenges
+        currentGameState.gamesCompleted.teddy = true;
+        
+        // Check if all boxes are opened
+        const allBoxesOpened = document.querySelectorAll('.box:not(.opened)').length === 0;
+        if (allBoxesOpened) {
+            currentGameState.allBoxesOpened = true;
+        }
+        
         // Check challenges
-        if (teddy.rarity === 'rare' && !currentGameState.dailyChallenges.collectRare.completed) {
-            currentGameState.dailyChallenges.collectRare.completed = true;
-            currentGameState.currentScore += currentGameState.dailyChallenges.collectRare.reward;
-            showChallengeComplete('collectRare');
-        }
-
-        if (Object.keys(currentGameState.teddyCounts).length >= 3 && 
-            !currentGameState.dailyChallenges.collectAll.completed) {
-            currentGameState.dailyChallenges.collectAll.completed = true;
-            currentGameState.currentScore += currentGameState.dailyChallenges.collectAll.reward;
-            showChallengeComplete('collectAll');
-        }
+        checkChallenges();
 
         // Add score
         const score = TEDDY_SCORES[teddy.name];
         currentGameState.currentScore += score;
         updateMovesAndScore();
-
-        if (currentGameState.currentScore >= 100 && !currentGameState.dailyChallenges.highScore.completed) {
-            currentGameState.dailyChallenges.highScore.completed = true;
-            currentGameState.currentScore += currentGameState.dailyChallenges.highScore.reward;
-            showChallengeComplete('highScore');
-        }
 
         if (teddy.rarity === 'rare') {
             confetti({
@@ -954,30 +1102,19 @@ function updateLevelDisplay() {
 
 function addExperience(amount) {
     currentGameState.experience += amount;
-    const pendingLevelUps = [];
     
-    while (currentGameState.experience >= currentGameState.experienceToNextLevel) {
-        currentGameState.experience -= currentGameState.experienceToNextLevel;
+    // Check for level up
+    if (currentGameState.experience >= currentGameState.experienceToNextLevel) {
         currentGameState.level++;
-        pendingLevelUps.push(currentGameState.level);
-        currentGameState.experienceToNextLevel = Math.floor(currentGameState.experienceToNextLevel * 1.4);
-        
-        // Add special present on level up
-        if (window.zodiacSystem) {
-            window.zodiacSystem.addSpecialPresent();
-        }
+        currentGameState.experience -= currentGameState.experienceToNextLevel;
+        currentGameState.experienceToNextLevel = Math.floor(currentGameState.experienceToNextLevel * 1.5);
+        currentGameState.leveledUp = true;
+        showLevelUp();
     }
     
     updateLevelDisplay();
     saveGameState();
-
-    // If there are pending level ups, show them one by one
-    if (pendingLevelUps.length > 0) {
-        currentGameState.pendingLevelUps = pendingLevelUps;
-        const firstLevel = pendingLevelUps.shift();
-        currentGameState.level = firstLevel;
-        showLevelUp();
-    }
+    checkChallenges();
 }
 
 function createConfetti() {
@@ -1033,7 +1170,6 @@ function showLevelUp() {
         // Only update rewards when user closes the popup
         if (window.zodiacSystem) {
             window.zodiacSystem.addMoney(100);
-            window.zodiacSystem.addSpecialPresent();
         }
         addExperience(50);
         
@@ -1071,7 +1207,7 @@ function loadGameState() {
         currentGameState.experienceToNextLevel = gameState.experienceToNextLevel || 100;
         currentGameState.currentScore = gameState.currentScore || 0;
         currentGameState.previousScore = gameState.previousScore || null;
-        currentGameState.dailyChallenges = gameState.dailyChallenges || { ...DAILY_CHALLENGES };
+        currentGameState.dailyChallenges = gameState.dailyChallenges || { ...ALL_DAILY_CHALLENGES };
         currentGameState.lastPlayDate = gameState.lastPlayDate;
         currentGameState.unlockedTeddies = gameState.unlockedTeddies || {};
         currentGameState.teddyCounts = gameState.teddyCounts || {};
@@ -1080,7 +1216,7 @@ function loadGameState() {
         const today = new Date().toDateString();
         if (currentGameState.lastPlayDate !== today) {
             // Reset daily challenges for new day
-            currentGameState.dailyChallenges = { ...DAILY_CHALLENGES };
+            currentGameState.dailyChallenges = { ...ALL_DAILY_CHALLENGES };
             currentGameState.lastPlayDate = today;
         }
         
@@ -1129,6 +1265,42 @@ function showWelcomeMessage(isReturningPlayer) {
             showWelcomeGift();
         }
     });
+}
+
+function createBalloons() {
+    const colors = ['#ff69b4', '#ff1493', '#ffd1dc', '#ffb6c1', '#ffc0cb'];
+    for (let i = 0; i < 20; i++) {
+        const balloon = document.createElement('div');
+        balloon.className = 'balloon';
+        balloon.style.left = Math.random() * 100 + 'vw';
+        balloon.style.animationDelay = Math.random() * 5 + 's';
+        balloon.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        document.body.appendChild(balloon);
+        
+        // Remove balloon after animation
+        setTimeout(() => {
+            balloon.remove();
+        }, 8000);
+    }
+}
+
+function createFireworks() {
+    const colors = ['#ff69b4', '#ff1493', '#ffd1dc', '#ffb6c1', '#ffc0cb'];
+    for (let i = 0; i < 50; i++) {
+        setTimeout(() => {
+            const firework = document.createElement('div');
+            firework.className = 'firework';
+            firework.style.left = Math.random() * 100 + 'vw';
+            firework.style.top = Math.random() * 100 + 'vh';
+            firework.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            document.body.appendChild(firework);
+            
+            // Remove firework after animation
+            setTimeout(() => {
+                firework.remove();
+            }, 1000);
+        }, i * 100);
+    }
 }
 
 function showWelcomeGift() {
@@ -1195,6 +1367,80 @@ function showWelcomeGift() {
         const closeButton = rewardPopup.querySelector('.close-challenge');
         closeButton.addEventListener('click', () => {
             rewardPopup.remove();
+            
+            // Check if player name is MAI and show birthday gift
+            if (currentGameState.playerName === 'MAI') {
+                setTimeout(() => {
+                    // Create birthday effects
+                    createBalloons();
+                    createFireworks();
+                    
+                    // Play birthday sound
+                    const birthdaySound = new Audio('assets/sound/hb.mp3');
+                    birthdaySound.volume = 0.5;
+                    birthdaySound.play();
+                    
+                    const birthdayPopup = document.createElement('div');
+                    birthdayPopup.className = 'challenge-complete';
+                    birthdayPopup.innerHTML = `
+                        <div class="challenge-content">
+                            <i class="fas fa-birthday-cake"></i>
+                            <h3>Chúc Mừng Sinh Nhật!</h3>
+                            <p>Chúc Mai có một ngày được một giấc ngủ ngon!</p>
+                            <div class="challenge-rewards">
+                                <div class="reward-item">
+                                    <i class="fas fa-gift"></i>
+                                    <span>Hộp quà đặc biệt x3</span>
+                                </div>
+                                <div class="reward-item">
+                                    <i class="fas fa-coins"></i>
+                                    <span>+500 xu</span>
+                                </div>
+                                <div class="reward-item">
+                                    <i class="fas fa-star"></i>
+                                    <span>+50 exp</span>
+                                </div>
+                            </div>
+                            <button class="close-challenge">Đóng</button>
+                        </div>
+                    `;
+                    
+                    document.body.appendChild(birthdayPopup);
+                    playSound('rare', 1.0);
+                    confetti({
+                        particleCount: 200,
+                        spread: 90,
+                        origin: { y: 0.6 },
+                        colors: ['#ff69b4', '#ff1493', '#ffd1dc']
+                    });
+
+                    // Add birthday rewards
+                    if (window.zodiacSystem) {
+                        window.zodiacSystem.addMoney(500);
+                        // Add 3 special presents
+                        for (let i = 0; i < 3; i++) {
+                            window.zodiacSystem.addSpecialPresent();
+                        }
+                    }
+                    addExperience(50);
+
+                    // Handle close button
+                    const birthdayCloseButton = birthdayPopup.querySelector('.close-challenge');
+                    birthdayCloseButton.addEventListener('click', () => {
+                        birthdayPopup.remove();
+                    });
+                }, 500);
+            }
         });
     });
-} 
+}
+
+function checkChallenges() {
+    Object.entries(currentGameState.dailyChallenges).forEach(([key, challenge]) => {
+        if (!challenge.completed && challenge.condition(currentGameState)) {
+            challenge.completed = true;
+            currentGameState.currentScore += challenge.reward;
+            showChallengeComplete(key);
+        }
+    });
+}
