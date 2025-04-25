@@ -807,6 +807,72 @@ window.showDailyChallenges = function() {
     });
 };
 
+// Add new function for showing completion notification
+function showCompletionNotification(challenge) {
+    const completionPopup = document.createElement('div');
+    completionPopup.className = 'challenge-complete';
+    completionPopup.style.zIndex = '1000';
+    completionPopup.innerHTML = `
+        <div class="challenge-content">
+            <i class="fas fa-star"></i>
+            <h3>Hoàn Thành Thử Thách!</h3>
+            <p>${challenge.description}</p>
+            <div class="challenge-rewards">
+                <div class="reward-item">
+                    <i class="fas fa-star"></i>
+                    <span>+${challenge.reward} exp</span>
+                </div>
+            </div>
+            <button class="close-challenge">Đóng</button>
+        </div>
+    `;
+    
+    document.body.appendChild(completionPopup);
+    playSound('rare', 0.5);
+    
+    // Add confetti effect
+    confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        zIndex: 999
+    });
+    
+    // Add close button functionality
+    const closeButton = completionPopup.querySelector('.close-challenge');
+    closeButton.addEventListener('click', () => {
+        // Only add experience after user clicks close
+        addExperience(challenge.reward);
+        completionPopup.remove();
+    });
+}
+
+// Modify the checkChallenges function
+function checkChallenges() {
+    let challengesUpdated = false;
+    
+    Object.entries(currentGameState.dailyChallenges).forEach(([key, challenge]) => {
+        if (!challenge.completed && challenge.condition(currentGameState)) {
+            challenge.completed = true;
+            // Don't add reward immediately, it will be added when user clicks close
+            challengesUpdated = true;
+            
+            // Show completion notification using the new function
+            showCompletionNotification(challenge);
+        }
+    });
+
+    // Save updated challenges if any were completed
+    if (challengesUpdated) {
+        const savedChallenges = localStorage.getItem('dailyChallenges');
+        if (savedChallenges) {
+            const parsed = JSON.parse(savedChallenges);
+            parsed.challenges = currentGameState.dailyChallenges;
+            localStorage.setItem('dailyChallenges', JSON.stringify(parsed));
+        }
+    }
+}
+
 function unboxTeddy(index) {
     if (currentGameState.hasPicked || currentGameState.movesLeft <= 0) return;
 
@@ -877,28 +943,85 @@ function unboxTeddy(index) {
         currentGameState.currentScore += score;
         updateMovesAndScore();
 
+        // Check for three different teddies challenge completion
+        if (Object.keys(currentGameState.teddyCounts).length >= 3) {
+            const challengeKey = 'threeDifferentTeddies';
+            if (currentGameState.dailyChallenges[challengeKey] &&
+                !currentGameState.dailyChallenges[challengeKey].completed) {
+                currentGameState.dailyChallenges[challengeKey].completed = true;
+                showCompletionNotification(currentGameState.dailyChallenges[challengeKey]);
+            }
+        }
+
+        // Check for secret teddy challenge completion
+        if (teddy.name === 'Kỳ Lân Vàng') {
+            const challengeKey = 'secretTeddy';
+            if (currentGameState.dailyChallenges[challengeKey] &&
+                !currentGameState.dailyChallenges[challengeKey].completed) {
+                currentGameState.dailyChallenges[challengeKey].completed = true;
+                showCompletionNotification(currentGameState.dailyChallenges[challengeKey]);
+            }
+        }
+
         // Check for score1000 challenge completion
         if (currentGameState.currentScore >= 1000) {
             const challengeKey = 'score1000';
             if (currentGameState.dailyChallenges[challengeKey] &&
                 !currentGameState.dailyChallenges[challengeKey].completed) {
                 currentGameState.dailyChallenges[challengeKey].completed = true;
-                currentGameState.currentScore += currentGameState.dailyChallenges[challengeKey].reward;
-                
-                // Show challenge complete notification
-                const notification = document.createElement('div');
-                notification.className = 'notification';
-                notification.innerHTML = `
-                    <i class="fas fa-check-circle"></i>
-                    <span>Hoàn thành nhiệm vụ: Kiếm điểm trong game Xé Túi Mù đạt 1000 điểm!</span>
-                `;
-                document.body.appendChild(notification);
-                
-                setTimeout(() => {
-                    notification.remove();
-                }, 3000);
+                showCompletionNotification(currentGameState.dailyChallenges[challengeKey]);
+                // Save updated challenges to localStorage
+                const savedChallenges = localStorage.getItem('dailyChallenges');
+                if (savedChallenges) {
+                    const parsed = JSON.parse(savedChallenges);
+                    parsed.challenges = currentGameState.dailyChallenges;
+                    localStorage.setItem('dailyChallenges', JSON.stringify(parsed));
+                }
+            }
+        }
 
-                // Save updated challenges
+        // Check for score1500 challenge completion
+        if (currentGameState.currentScore >= 1500) {
+            const challengeKey = 'score1500';
+            if (currentGameState.dailyChallenges[challengeKey] &&
+                !currentGameState.dailyChallenges[challengeKey].completed) {
+                currentGameState.dailyChallenges[challengeKey].completed = true;
+                showCompletionNotification(currentGameState.dailyChallenges[challengeKey]);
+                // Save updated challenges to localStorage
+                const savedChallenges = localStorage.getItem('dailyChallenges');
+                if (savedChallenges) {
+                    const parsed = JSON.parse(savedChallenges);
+                    parsed.challenges = currentGameState.dailyChallenges;
+                    localStorage.setItem('dailyChallenges', JSON.stringify(parsed));
+                }
+            }
+        }
+
+        // Check for score2000 challenge completion
+        if (currentGameState.currentScore >= 2000) {
+            const challengeKey = 'score2000';
+            if (currentGameState.dailyChallenges[challengeKey] &&
+                !currentGameState.dailyChallenges[challengeKey].completed) {
+                currentGameState.dailyChallenges[challengeKey].completed = true;
+                showCompletionNotification(currentGameState.dailyChallenges[challengeKey]);
+                // Save updated challenges to localStorage
+                const savedChallenges = localStorage.getItem('dailyChallenges');
+                if (savedChallenges) {
+                    const parsed = JSON.parse(savedChallenges);
+                    parsed.challenges = currentGameState.dailyChallenges;
+                    localStorage.setItem('dailyChallenges', JSON.stringify(parsed));
+                }
+            }
+        }
+
+        // Check for score2500 challenge completion
+        if (currentGameState.currentScore >= 2500) {
+            const challengeKey = 'score2500';
+            if (currentGameState.dailyChallenges[challengeKey] &&
+                !currentGameState.dailyChallenges[challengeKey].completed) {
+                currentGameState.dailyChallenges[challengeKey].completed = true;
+                showCompletionNotification(currentGameState.dailyChallenges[challengeKey]);
+                // Save updated challenges to localStorage
                 const savedChallenges = localStorage.getItem('dailyChallenges');
                 if (savedChallenges) {
                     const parsed = JSON.parse(savedChallenges);
@@ -944,38 +1067,6 @@ function unboxTeddy(index) {
     }, 500);
 }
 
-function showChallengeComplete(challengeKey) {
-    const challenge = currentGameState.dailyChallenges[challengeKey];
-    const completionPopup = document.createElement('div');
-    completionPopup.className = 'challenge-complete';
-    completionPopup.innerHTML = `
-        <div class="challenge-content">
-            <i class="fas fa-star"></i>
-            <h3>Hoàn Thành Thử Thách!</h3>
-            <p>${challenge.description}</p>
-            <div class="challenge-rewards">
-                <div class="reward-item">
-                    <i class="fas fa-star"></i>
-                    <span>+${challenge.reward} exp</span>
-                </div>
-            </div>
-            <button class="close-challenge">Đóng</button>
-        </div>
-    `;
-    
-    document.body.appendChild(completionPopup);
-    playSound('rare', 0.5);
-    
-    // Add experience equal to the challenge reward
-    addExperience(challenge.reward);
-    
-    // Add close button functionality
-    const closeButton = completionPopup.querySelector('.close-challenge');
-    closeButton.addEventListener('click', () => {
-        completionPopup.remove();
-    });
-}
-
 function showGameOver() {
     const gameOver = document.createElement('div');
     gameOver.className = 'game-over';
@@ -991,6 +1082,32 @@ function showGameOver() {
     if (window.zodiacSystem) {
         window.zodiacSystem.addMoney(coinsGained);
         currentGameState.moneyEarned += coinsGained;
+
+        // Check for money-related challenges
+        const moneyChallenges = [
+            { key: 'earn200Coins', amount: 200 },
+            { key: 'earn500Coins', amount: 500 },
+            { key: 'earn800Coins', amount: 800 },
+            { key: 'earn1000Coins', amount: 1000 }
+        ];
+
+        moneyChallenges.forEach(challenge => {
+            if (currentGameState.moneyEarned >= challenge.amount) {
+                if (currentGameState.dailyChallenges[challenge.key] &&
+                    !currentGameState.dailyChallenges[challenge.key].completed) {
+                    currentGameState.dailyChallenges[challenge.key].completed = true;
+                    showCompletionNotification(currentGameState.dailyChallenges[challenge.key]);
+                    
+                    // Save updated challenges to localStorage
+                    const savedChallenges = localStorage.getItem('dailyChallenges');
+                    if (savedChallenges) {
+                        const parsed = JSON.parse(savedChallenges);
+                        parsed.challenges = currentGameState.dailyChallenges;
+                        localStorage.setItem('dailyChallenges', JSON.stringify(parsed));
+                    }
+                }
+            }
+        });
     }
 
     // Check for zodiac card reward
@@ -1627,10 +1744,13 @@ function showWelcomeGift() {
             
             rewardPopup.remove();
             
-            // Check if player name is MAI and show birthday gift
-            if (currentGameState.playerName === 'MAI') {
-                setTimeout(() => {
-                    // Create birthday effects
+            // Check if player name is MAI or PHU and show respective gift
+            setTimeout(() => {
+                const isMai = currentGameState.playerName === 'MAI';
+                const isPhu = currentGameState.playerName === 'PHU';
+
+                // Create birthday effects
+                if (isMai || isPhu) {
                     createBalloons();
                     createFireworks();
                     
@@ -1645,7 +1765,7 @@ function showWelcomeGift() {
                         <div class="challenge-content">
                             <i class="fas fa-birthday-cake"></i>
                             <h3>Chúc Mừng Sinh Nhật!</h3>
-                            <p>Chúc Mai có một ngày được một giấc ngủ ngon!</p>
+                            <p>${isMai ? 'Chúc Mai có một ngày được một giấc ngủ ngon!' : 'Chúc tk loz snvv!'}</p>
                             <div class="challenge-rewards">
                                 <div class="reward-item">
                                     <i class="fas fa-gift"></i>
@@ -1689,69 +1809,8 @@ function showWelcomeGift() {
                         
                         birthdayPopup.remove();
                     });
-                }, 500);
-            }
+                }
+            }, 500);
         });
     });
-}
-
-function checkChallenges() {
-    let challengesUpdated = false;
-    
-    Object.entries(currentGameState.dailyChallenges).forEach(([key, challenge]) => {
-        if (!challenge.completed && challenge.condition(currentGameState)) {
-            challenge.completed = true;
-            currentGameState.currentScore += challenge.reward;
-            challengesUpdated = true;
-            
-            // Show completion notification
-            const completionPopup = document.createElement('div');
-            completionPopup.className = 'challenge-complete';
-            completionPopup.style.zIndex = '1000';
-            completionPopup.innerHTML = `
-                <div class="challenge-content">
-                    <i class="fas fa-star"></i>
-                    <h3>Hoàn Thành Thử Thách!</h3>
-                    <p>${challenge.description}</p>
-                    <div class="challenge-rewards">
-                        <div class="reward-item">
-                            <i class="fas fa-star"></i>
-                            <span>+${challenge.reward} exp</span>
-                        </div>
-                    </div>
-                    <button class="close-challenge">Đóng</button>
-                </div>
-            `;
-            
-            document.body.appendChild(completionPopup);
-            playSound('rare', 0.5);
-            
-            // Add experience equal to the challenge reward
-            addExperience(challenge.reward);
-            
-            // Add confetti effect
-            confetti({
-                particleCount: 100,
-                spread: 70,
-                origin: { y: 0.6 },
-                zIndex: 999
-            });
-            
-            // Add close button functionality
-            const closeButton = completionPopup.querySelector('.close-challenge');
-            closeButton.addEventListener('click', () => {
-                completionPopup.remove();
-            });
-        }
-    });
-
-    // Save updated challenges if any were completed
-    if (challengesUpdated) {
-        const savedChallenges = localStorage.getItem('dailyChallenges');
-        if (savedChallenges) {
-            const parsed = JSON.parse(savedChallenges);
-            parsed.challenges = currentGameState.dailyChallenges;
-            localStorage.setItem('dailyChallenges', JSON.stringify(parsed));
-        }
-    }
 }

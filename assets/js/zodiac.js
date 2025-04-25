@@ -198,6 +198,17 @@ class ZodiacSystem {
 
             yesButton.addEventListener('click', () => {
                 confirmPopup.remove();
+                // Increment special presents opened counter
+                if (typeof currentGameState !== 'undefined') {
+                    currentGameState.specialPresentsOpened++;
+                    // Check for challenge completion
+                    const challengeKey = 'openSpecialPresent';
+                    if (currentGameState.dailyChallenges[challengeKey] &&
+                        !currentGameState.dailyChallenges[challengeKey].completed) {
+                        currentGameState.dailyChallenges[challengeKey].completed = true;
+                        showCompletionNotification(currentGameState.dailyChallenges[challengeKey]);
+                    }
+                }
                 this.showWheelOfFortune(item);
             });
 
@@ -376,18 +387,16 @@ class ZodiacSystem {
                     currentGameState.dailyChallenges[challengeKey].completed = true;
                     currentGameState.currentScore += currentGameState.dailyChallenges[challengeKey].reward;
                     
-                    // Show challenge complete notification
-                    const notification = document.createElement('div');
-                    notification.className = 'notification';
-                    notification.innerHTML = `
-                        <i class="fas fa-check-circle"></i>
-                        <span>Hoàn thành nhiệm vụ: Mở 3 cung hoàng đạo uncommon!</span>
-                    `;
-                    document.body.appendChild(notification);
-                    
-                    setTimeout(() => {
-                        notification.remove();
-                    }, 3000);
+                    // Show completion notification using the common function
+                    showCompletionNotification(currentGameState.dailyChallenges[challengeKey]);
+
+                    // Save updated challenges
+                    const savedChallenges = localStorage.getItem('dailyChallenges');
+                    if (savedChallenges) {
+                        const parsed = JSON.parse(savedChallenges);
+                        parsed.challenges = currentGameState.dailyChallenges;
+                        localStorage.setItem('dailyChallenges', JSON.stringify(parsed));
+                    }
                 }
             } else if (zodiac.rarity === 'rare' && totalRare === 2) {
                 const challengeKey = 'twoRareZodiacs';
@@ -396,18 +405,16 @@ class ZodiacSystem {
                     currentGameState.dailyChallenges[challengeKey].completed = true;
                     currentGameState.currentScore += currentGameState.dailyChallenges[challengeKey].reward;
                     
-                    // Show challenge complete notification
-                    const notification = document.createElement('div');
-                    notification.className = 'notification';
-                    notification.innerHTML = `
-                        <i class="fas fa-check-circle"></i>
-                        <span>Hoàn thành nhiệm vụ: Mở 2 cung hoàng đạo hiếm!</span>
-                    `;
-                    document.body.appendChild(notification);
-                    
-                    setTimeout(() => {
-                        notification.remove();
-                    }, 3000);
+                    // Show completion notification using the common function
+                    showCompletionNotification(currentGameState.dailyChallenges[challengeKey]);
+
+                    // Save updated challenges
+                    const savedChallenges = localStorage.getItem('dailyChallenges');
+                    if (savedChallenges) {
+                        const parsed = JSON.parse(savedChallenges);
+                        parsed.challenges = currentGameState.dailyChallenges;
+                        localStorage.setItem('dailyChallenges', JSON.stringify(parsed));
+                    }
                 }
             } else if (zodiac.rarity === 'epic' && totalEpic === 1) {
                 const challengeKey = 'oneEpicZodiac';
@@ -416,18 +423,16 @@ class ZodiacSystem {
                     currentGameState.dailyChallenges[challengeKey].completed = true;
                     currentGameState.currentScore += currentGameState.dailyChallenges[challengeKey].reward;
                     
-                    // Show challenge complete notification
-                    const notification = document.createElement('div');
-                    notification.className = 'notification';
-                    notification.innerHTML = `
-                        <i class="fas fa-check-circle"></i>
-                        <span>Hoàn thành nhiệm vụ: Mở 1 cung hoàng đạo cực hiếm!</span>
-                    `;
-                    document.body.appendChild(notification);
-                    
-                    setTimeout(() => {
-                        notification.remove();
-                    }, 3000);
+                    // Show completion notification using the common function
+                    showCompletionNotification(currentGameState.dailyChallenges[challengeKey]);
+
+                    // Save updated challenges
+                    const savedChallenges = localStorage.getItem('dailyChallenges');
+                    if (savedChallenges) {
+                        const parsed = JSON.parse(savedChallenges);
+                        parsed.challenges = currentGameState.dailyChallenges;
+                        localStorage.setItem('dailyChallenges', JSON.stringify(parsed));
+                    }
                 }
             }
         }
