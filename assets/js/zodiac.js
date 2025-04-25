@@ -2,18 +2,18 @@
 class ZodiacSystem {
     constructor() {
         this.zodiacSigns = [
-            { id: 1, name: 'Aries', rate: 0.1, rarity: 'common' },
-            { id: 2, name: 'Taurus', rate: 0.01, rarity: 'epic' },
-            { id: 3, name: 'Gemini', rate: 0.1, rarity: 'common' },
-            { id: 4, name: 'Cancer', rate: 0.1, rarity: 'common' },
-            { id: 5, name: 'Leo', rate: 0.05, rarity: 'rare' },
-            { id: 6, name: 'Virgo', rate: 0.1, rarity: 'common' },
-            { id: 7, name: 'Libra', rate: 0.1, rarity: 'common' },
-            { id: 8, name: 'Scorpio', rate: 0.05, rarity: 'rare' },
-            { id: 9, name: 'Sagittarius', rate: 0.1, rarity: 'common' },
-            { id: 10, name: 'Capricorn', rate: 0.05, rarity: 'rare' },
-            { id: 11, name: 'Aquarius', rate: 0.05, rarity: 'rare' },
-            { id: 12, name: 'Pisces', rate: 0.05, rarity: 'rare' }
+            { id: 1, name: 'Aries', rate: 0.5, rarity: 'common' },
+            { id: 2, name: 'Taurus', rate: 0.05, rarity: 'epic' },
+            { id: 3, name: 'Gemini', rate: 0.5, rarity: 'common' },
+            { id: 4, name: 'Cancer', rate: 0.5, rarity: 'common' },
+            { id: 5, name: 'Leo', rate: 0.1, rarity: 'rare' },
+            { id: 6, name: 'Virgo', rate: 0.5, rarity: 'common' },
+            { id: 7, name: 'Libra', rate: 0.5, rarity: 'common' },
+            { id: 8, name: 'Scorpio', rate: 0.1, rarity: 'rare' },
+            { id: 9, name: 'Sagittarius', rate: 0.5, rarity: 'common' },
+            { id: 10, name: 'Capricorn', rate: 0.1, rarity: 'rare' },
+            { id: 11, name: 'Aquarius', rate: 0.1, rarity: 'rare' },
+            { id: 12, name: 'Pisces', rate: 0.1, rarity: 'rare' }
         ];
 
         this.backpack = {
@@ -208,6 +208,20 @@ class ZodiacSystem {
     }
 
     showWheelOfFortune(item) {
+        // Decrease present count
+        item.count--;
+        
+        // Remove item if count reaches 0
+        if (item.count <= 0) {
+            const itemIndex = this.backpack.items.findIndex(i => i === item);
+            if (itemIndex !== -1) {
+                this.backpack.items[itemIndex] = null;
+            }
+        }
+        
+        this.updateBackpackDisplay();
+        this.saveData();
+        
         const casePopup = document.createElement('div');
         casePopup.className = 'challenge-complete case-popup';
         casePopup.innerHTML = `
@@ -295,16 +309,17 @@ class ZodiacSystem {
                         pointer.style.boxShadow = 'none';
                         
                         // Show result with flip animation
-                        this.showZodiacResult(selectedZodiac, casePopup, item);
+                        this.showZodiacResult(selectedZodiac, casePopup);
                     }, (3 + randomLoops * 0.5) * 1000);
                 }, 200);
             }, 500);
         });
     }
 
-    showZodiacResult(zodiac, casePopup, item) {
+    showZodiacResult(zodiac, casePopup) {
         const resultPopup = document.createElement('div');
         resultPopup.className = 'challenge-complete';
+        resultPopup.style.zIndex = '2000';
         resultPopup.innerHTML = `
             <div class="challenge-content">
                 <div class="zodiac-result">
@@ -335,15 +350,31 @@ class ZodiacSystem {
             playSound('common', 0.6);
         }
 
-        // Remove the special present from backpack
-        const itemIndex = this.backpack.items.findIndex(i => i === item);
-        if (itemIndex !== -1) {
-            this.backpack.items[itemIndex] = null;
-            this.updateBackpackDisplay();
-        }
-
         // Update zodiac collection
         this.collectedZodiacs[zodiac.id - 1]++;
+        
+        // Update game state for challenges
+        if (window.currentGameState) {
+            if (zodiac.rarity === 'epic') {
+                window.currentGameState.epicZodiacsCollected++;
+            } else if (zodiac.rarity === 'rare') {
+                window.currentGameState.rareZodiacsCollected++;
+            } else {
+                window.currentGameState.uncommonZodiacsCollected++;
+                // Check if we've collected 3 uncommon zodiacs
+                if (window.currentGameState.uncommonZodiacsCollected === 3) {
+                    // Check if this challenge exists and hasn't been completed
+                    const challengeKey = 'threeUncommonZodiacs';
+                    if (window.currentGameState.dailyChallenges[challengeKey] && 
+                        !window.currentGameState.dailyChallenges[challengeKey].completed) {
+                        window.currentGameState.dailyChallenges[challengeKey].completed = true;
+                        window.currentGameState.currentScore += window.currentGameState.dailyChallenges[challengeKey].reward;
+                        showChallengeComplete(challengeKey);
+                    }
+                }
+            }
+        }
+        
         this.updateZodiacDisplay();
         this.saveData();
 
@@ -355,28 +386,48 @@ class ZodiacSystem {
             const card = resultPopup.querySelector('.zodiac-card');
             card.classList.add('flipped');
             
+            // Create a container for confetti that will be above the backpack
+            const confettiContainer = document.createElement('div');
+            confettiContainer.className = 'confetti-container';
+            confettiContainer.style.position = 'fixed';
+            confettiContainer.style.top = '0';
+            confettiContainer.style.left = '0';
+            confettiContainer.style.width = '100%';
+            confettiContainer.style.height = '100%';
+            confettiContainer.style.zIndex = '1500'; // Between backpack and popup
+            confettiContainer.style.pointerEvents = 'none';
+            document.body.appendChild(confettiContainer);
+            
             // Add confetti effect based on rarity
             if (zodiac.rarity === 'epic') {
                 confetti({
                     particleCount: 200,
                     spread: 90,
                     origin: { y: 0.6 },
-                    colors: ['#9C27B0', '#8e24aa', '#7B1FA2']
+                    colors: ['#9C27B0', '#8e24aa', '#7B1FA2'],
+                    zIndex: 1500
                 });
             } else if (zodiac.rarity === 'rare') {
                 confetti({
                     particleCount: 150,
                     spread: 80,
                     origin: { y: 0.6 },
-                    colors: ['#2196F3', '#1e88e5', '#1976D2']
+                    colors: ['#2196F3', '#1e88e5', '#1976D2'],
+                    zIndex: 1500
                 });
             } else {
                 confetti({
                     particleCount: 100,
                     spread: 70,
-                    origin: { y: 0.6 }
+                    origin: { y: 0.6 },
+                    zIndex: 1500
                 });
             }
+            
+            // Remove confetti container after animation
+            setTimeout(() => {
+                confettiContainer.remove();
+            }, 3000);
         }, 500);
 
         // Handle close button
@@ -402,16 +453,25 @@ class ZodiacSystem {
     }
 
     addSpecialPresent() {
-        const emptySlot = this.backpack.items.findIndex(item => item === null);
-        if (emptySlot !== -1) {
-            this.backpack.items[emptySlot] = {
-                id: 'present',
-                name: 'Hộp quà đặc biệt',
-                count: 1
-            };
-            this.updateBackpackDisplay();
-            this.saveData();
+        // Find existing special present slot
+        const presentSlot = this.backpack.items.find(item => item && item.id === 'present');
+        
+        if (presentSlot) {
+            // If present exists, increment count
+            presentSlot.count++;
+        } else {
+            // Find empty slot if no present exists
+            const emptySlot = this.backpack.items.findIndex(item => item === null);
+            if (emptySlot !== -1) {
+                this.backpack.items[emptySlot] = {
+                    id: 'present',
+                    name: 'Hộp quà đặc biệt',
+                    count: 1
+                };
+            }
         }
+        this.updateBackpackDisplay();
+        this.saveData();
     }
 
     saveData() {

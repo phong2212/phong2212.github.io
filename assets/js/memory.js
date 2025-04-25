@@ -11,6 +11,7 @@ class MemoryGame {
         this.isPlaying = false;
         this.difficulty = 'medium'; // Default difficulty
         this.consecutiveMatches = 0; // Track consecutive matches
+        this.playerName = this.getPlayerName(); // Get player name from localStorage
 
         // Show initial transition
         const transition = document.querySelector('.game-transition');
@@ -34,6 +35,10 @@ class MemoryGame {
         }, 1000);
     }
 
+    getPlayerName() {
+        return localStorage.getItem('playerName') || 'default';
+    }
+
     init() {
         // Show difficulty selection screen
         const difficultySelect = document.querySelector('.difficulty-select');
@@ -42,10 +47,7 @@ class MemoryGame {
         // Add back button to difficulty selection
         const backButton = document.createElement('button');
         backButton.className = 'back-to-select';
-        backButton.textContent = 'Quay lại';
-        backButton.style.position = 'absolute';
-        backButton.style.top = '20px';
-        backButton.style.left = '20px';
+        backButton.innerHTML = '<i class="fas fa-arrow-left"></i><span>Quay lại</span>';
         backButton.addEventListener('click', () => {
             const transition = document.querySelector('.game-transition');
             transition.style.display = 'flex';
@@ -238,6 +240,12 @@ class MemoryGame {
         this.updateScore();
         this.flippedCards = [];
 
+        // Add time bonus for matching
+        const timeBonus = 1; // 1 second bonus for each match
+        this.timer += timeBonus;
+        this.updateTimer();
+        this.showTimeBonus(timeBonus);
+
         // Chance to get zodiac sign
         if (window.zodiacSystem && Math.random() < 0.2) { // 20% chance
             const zodiacId = Math.floor(Math.random() * 12) + 1;
@@ -250,6 +258,27 @@ class MemoryGame {
         if (this.matchedPairs === this.cards.length / 2) {
             this.handleLevelComplete();
         }
+    }
+
+    showTimeBonus(bonus) {
+        const timerElement = document.querySelector('.timer');
+        const bonusElement = document.createElement('span');
+        bonusElement.className = 'time-bonus';
+        bonusElement.textContent = `+${bonus}s`;
+        bonusElement.style.position = 'absolute';
+        bonusElement.style.right = '0';
+        bonusElement.style.top = '-20px';
+        bonusElement.style.color = '#4CAF50';
+        bonusElement.style.fontWeight = 'bold';
+        bonusElement.style.fontSize = '1.2em';
+        bonusElement.style.animation = 'timeBonus 1s ease-out forwards';
+        
+        timerElement.style.position = 'relative';
+        timerElement.appendChild(bonusElement);
+        
+        setTimeout(() => {
+            bonusElement.remove();
+        }, 1000);
     }
 
     handleMismatch(card1, card2) {
@@ -281,24 +310,24 @@ class MemoryGame {
             case 'easy':
                 expGained = 5;
                 coinsGained = 5;
+                if (this.timer > 15) {
+                    coinsGained += 5;
+                }
                 break;
             case 'medium':
                 expGained = 15;
                 coinsGained = 10;
+                if (this.timer > 20) {
+                    coinsGained += 10;
+                }
                 break;
             case 'hard':
                 expGained = 30;
                 coinsGained = 15;
+                if (this.timer > 30) {
+                    coinsGained += 15;
+                }
                 break;
-        }
-
-        // Add bonus coins based on remaining time
-        if (this.timer > 20) {
-            coinsGained += 15;
-        } else if (this.timer > 10) {
-            coinsGained += 10;
-        } else if (this.timer > 5) {
-            coinsGained += 5;
         }
 
         // Update experience in localStorage
@@ -309,6 +338,7 @@ class MemoryGame {
         // Add coins to zodiac system
         if (window.zodiacSystem) {
             window.zodiacSystem.addMoney(coinsGained);
+            currentGameState.moneyEarned += coinsGained;
         }
 
         // Check for zodiac card reward
@@ -375,7 +405,6 @@ class MemoryGame {
             this.moves = 0;
             this.score = 0;
             this.consecutiveMatches = 0;
-            this.timer = 30;
             this.isPlaying = true;
             
             // Update UI
@@ -397,7 +426,18 @@ class MemoryGame {
     }
 
     startTimer() {
-        this.timer = 30; // Reset to 30 seconds
+        // Set timer based on difficulty
+        switch(this.difficulty) {
+            case 'easy':
+                this.timer = 30;
+                break;
+            case 'medium':
+                this.timer = 45;
+                break;
+            case 'hard':
+                this.timer = 60;
+                break;
+        }
         this.updateTimer();
         this.timerInterval = setInterval(() => {
             this.timer--;
@@ -433,13 +473,41 @@ class MemoryGame {
     handleTimeUp() {
         this.isPlaying = false;
         const levelComplete = document.querySelector('.level-complete');
-        const finalTime = document.querySelector('.final-time');
-        const finalMoves = document.querySelector('.final-moves');
-        const finalScore = document.querySelector('.final-score');
-
-        finalTime.textContent = 'Hết thời gian!';
-        finalMoves.textContent = this.moves;
-        finalScore.textContent = this.score;
+        const levelCompleteContent = document.querySelector('.level-complete-content');
+        
+        // Update content for time up screen
+        levelCompleteContent.innerHTML = `
+            <h2>Hết thời gian!</h2>
+            <p>Bạn đã không hoàn thành level!</p>
+            <div class="stats">
+                <p>Thời gian: <span class="final-time">00:00</span></p>
+                <p>Lượt: <span class="final-moves">${this.moves}</span></p>
+                <p>Điểm: <span class="final-score">${this.score}</span></p>
+            </div>
+        `;
+        
+        // Add play again button
+        const playAgainButton = document.createElement('button');
+        playAgainButton.className = 'play-again';
+        playAgainButton.innerHTML = '<i class="fas fa-redo"></i> Chơi Lại';
+        playAgainButton.addEventListener('click', () => {
+            // Reset all game state
+            this.matchedPairs = 0;
+            this.moves = 0;
+            this.score = 0;
+            this.consecutiveMatches = 0;
+            this.isPlaying = true;
+            
+            // Update UI
+            document.querySelector('.moves').textContent = 'Lượt: 0';
+            document.querySelector('.current-score').textContent = 'Điểm: 0';
+            
+            // Reload level and start timer
+            this.loadLevel();
+            this.startTimer();
+            levelComplete.style.display = 'none';
+        });
+        levelCompleteContent.appendChild(playAgainButton);
 
         levelComplete.style.display = 'flex';
     }
@@ -450,11 +518,11 @@ class MemoryGame {
             score: this.score,
             unlockedTeddies: this.level
         };
-        localStorage.setItem('memoryProgress', JSON.stringify(progress));
+        localStorage.setItem(`memoryProgress_${this.playerName}`, JSON.stringify(progress));
     }
 
     loadProgress() {
-        const progress = JSON.parse(localStorage.getItem('memoryProgress'));
+        const progress = JSON.parse(localStorage.getItem(`memoryProgress_${this.playerName}`));
         if (progress) {
             this.level = progress.level;
             this.score = progress.score;
