@@ -2049,114 +2049,108 @@ header p {
 
 .zodiac-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
     padding: 15px;
-    max-height: 70vh;
+    max-width: 700px;
+    margin: 0 auto;
+    height: calc(100vh - 250px);
     overflow-y: auto;
-    background-color: #fff5f7;
-    border-radius: 10px;
 }
 
 .zodiac-slot {
-    aspect-ratio: 1;
-    background-color: #f8f8f8;
-    border-radius: 10px;
     position: relative;
-    overflow: hidden;
-    border: 2px solid #ff69b4;
+    aspect-ratio: 1;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-height: 120px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Background colors based on rarity */
+.zodiac-slot.common {
+    background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
+    border: 2px solid #d0d0d0;
+}
+
+.zodiac-slot.rare {
+    background: linear-gradient(135deg, #ffd700 0%, #ffa500 100%);
+    border: 2px solid #ffa500;
+    box-shadow: 0 4px 12px rgba(255, 165, 0, 0.3);
+}
+
+.zodiac-slot.epic {
+    background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%);
+    border: 2px solid #ff1493;
+    box-shadow: 0 4px 12px rgba(255, 20, 147, 0.3);
 }
 
 .zodiac-slot img {
     width: 70%;
     height: 70%;
     object-fit: contain;
-    padding: 5px;
+    transition: all 0.3s ease;
+    padding: 8px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
-.zodiac-slot.locked {
-    background-color: #f0f0f0;
+.zodiac-slot:not(.locked) img {
+    animation: revealImage 0.5s ease forwards;
 }
 
 .zodiac-slot .zodiac-count {
     position: absolute;
     bottom: 5px;
     right: 5px;
-    background-color: #ff69b4;
+    background: rgba(0, 0, 0, 0.7);
     color: white;
     padding: 2px 6px;
     border-radius: 10px;
     font-size: 0.8rem;
-}
-
-.zodiac-slot.newly-unlocked {
-    animation: shake 0.5s ease-in-out;
-}
-
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    75% { transform: translateX(5px); }
-}
-
-.zodiac-slot img {
-    transition: all 0.3s ease;
-}
-
-.zodiac-slot:not(.locked) img {
-    animation: revealImage 0.5s ease-out;
-}
-
-@keyframes revealImage {
-    0% {
-        transform: scale(0.8);
-        opacity: 0;
-    }
-    50% {
-        transform: scale(1.2);
-    }
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
+    backdrop-filter: blur(2px);
 }
 
 @media (max-width: 768px) {
     .zodiac-grid {
         grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
-        padding: 8px;
+        gap: 10px;
+        padding: 10px;
+        height: auto;
     }
-    
+
     .zodiac-slot {
-        border-width: 1px;
+        min-height: 100px;
     }
-    
+
     .zodiac-slot img {
         width: 65%;
         height: 65%;
-        padding: 4px;
     }
-    
+
     .zodiac-header h2 {
-        font-size: 1.2rem;
+        font-size: 1.5rem;
     }
 }
 
 @media (max-width: 480px) {
     .zodiac-grid {
         grid-template-columns: repeat(2, 1fr);
-        gap: 6px;
-        padding: 6px;
+        gap: 8px;
+        padding: 8px;
     }
-    
+
+    .zodiac-slot {
+        min-height: 90px;
+    }
+
     .zodiac-slot img {
         width: 60%;
         height: 60%;
-        padding: 3px;
     }
 }
 
@@ -3012,4 +3006,33 @@ header p {
     .virtual-keyboard {
         display: none;
     }
+}
+
+.zodiac-slot.newly-unlocked {
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+@keyframes revealImage {
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.zodiac-slot.locked {
+    background-color: #f0f0f0;
+    opacity: 0.7;
 }

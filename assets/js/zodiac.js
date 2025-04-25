@@ -2,18 +2,18 @@
 class ZodiacSystem {
     constructor() {
         this.zodiacSigns = [
-            { id: 1, name: 'Aries', rate: 0.5, rarity: 'common' },
-            { id: 2, name: 'Taurus', rate: 0.05, rarity: 'epic' },
-            { id: 3, name: 'Gemini', rate: 0.5, rarity: 'common' },
-            { id: 4, name: 'Cancer', rate: 0.5, rarity: 'common' },
-            { id: 5, name: 'Leo', rate: 0.1, rarity: 'rare' },
-            { id: 6, name: 'Virgo', rate: 0.5, rarity: 'common' },
-            { id: 7, name: 'Libra', rate: 0.5, rarity: 'common' },
-            { id: 8, name: 'Scorpio', rate: 0.1, rarity: 'rare' },
-            { id: 9, name: 'Sagittarius', rate: 0.5, rarity: 'common' },
-            { id: 10, name: 'Capricorn', rate: 0.1, rarity: 'rare' },
-            { id: 11, name: 'Aquarius', rate: 0.1, rarity: 'rare' },
-            { id: 12, name: 'Pisces', rate: 0.1, rarity: 'rare' }
+            { id: 1, name: 'Bạch Dương', rate: 0.5, rarity: 'common' },
+            { id: 2, name: 'Kim Ngưu', rate: 0.05, rarity: 'epic' },
+            { id: 3, name: 'Song Tử', rate: 0.5, rarity: 'common' },
+            { id: 4, name: 'Cự Giải', rate: 0.5, rarity: 'common' },
+            { id: 5, name: 'Sư Tử', rate: 0.1, rarity: 'rare' },
+            { id: 6, name: 'Xử Nữ', rate: 0.5, rarity: 'common' },
+            { id: 7, name: 'Thiên Bình', rate: 0.5, rarity: 'common' },
+            { id: 8, name: 'Bò Cạp', rate: 0.1, rarity: 'rare' },
+            { id: 9, name: 'Nhân Mã', rate: 0.5, rarity: 'common' },
+            { id: 10, name: 'Ma Kết', rate: 0.1, rarity: 'rare' },
+            { id: 11, name: 'Bảo Bình', rate: 0.1, rarity: 'rare' },
+            { id: 12, name: 'Song Ngư', rate: 0.1, rarity: 'rare' }
         ];
 
         this.backpack = {
@@ -130,12 +130,12 @@ class ZodiacSystem {
             const slot = slots[index];
             const img = slot.querySelector('img');
             const zodiac = this.zodiacSigns[index];
-            
+
             if (count > 0) {
                 // Check if this is a newly unlocked zodiac
                 const wasLocked = slot.classList.contains('locked');
                 slot.classList.remove('locked');
-                
+
                 if (wasLocked) {
                     // Add newly-unlocked class for animation
                     slot.classList.add('newly-unlocked');
@@ -144,10 +144,10 @@ class ZodiacSystem {
                         slot.classList.remove('newly-unlocked');
                     }, 500);
                 }
-                
+
                 // Add rarity class
                 slot.classList.add(zodiac.rarity);
-                
+
                 img.src = `assets/img/${index + 1}.png`;
                 if (count > 1) {
                     const countSpan = document.createElement('span');
@@ -188,7 +188,7 @@ class ZodiacSystem {
                     </div>
                 </div>
             `;
-            
+
             document.body.appendChild(confirmPopup);
             playSound('click', 0.5);
 
@@ -210,7 +210,7 @@ class ZodiacSystem {
     showWheelOfFortune(item) {
         // Decrease present count
         item.count--;
-        
+
         // Remove item if count reaches 0
         if (item.count <= 0) {
             const itemIndex = this.backpack.items.findIndex(i => i === item);
@@ -218,30 +218,30 @@ class ZodiacSystem {
                 this.backpack.items[itemIndex] = null;
             }
         }
-        
+
         this.updateBackpackDisplay();
         this.saveData();
-        
+
         const casePopup = document.createElement('div');
         casePopup.className = 'challenge-complete case-popup';
         casePopup.innerHTML = `
             <div class="challenge-content">
                 <div class="case-container">
                     <div class="case-items">
-                        ${Array(24).fill(0).map((_, i) => 
-                            this.zodiacSigns.map((sign, index) => `
+                        ${Array(24).fill(0).map((_, i) =>
+            this.zodiacSigns.map((sign, index) => `
                                 <div class="case-item" data-rarity="${sign.rarity}">
                                     <img src="assets/img/hidden-${index + 1}.png" alt="${sign.name}">
                                 </div>
                             `).join('')
-                        ).join('')}
+        ).join('')}
                     </div>
                     <div class="case-pointer"></div>
                 </div>
                 <button class="spin-button">Mở Hộp</button>
             </div>
         `;
-        
+
         document.body.appendChild(casePopup);
         playSound('click', 0.5);
 
@@ -256,12 +256,12 @@ class ZodiacSystem {
 
             // Calculate total probability
             const totalProb = this.zodiacSigns.reduce((sum, sign) => sum + sign.rate, 0);
-            
+
             // Select zodiac based on rates
             const rand = Math.random() * totalProb;
             let cumulativeProb = 0;
             let selectedZodiac = null;
-            
+
             for (const zodiac of this.zodiacSigns) {
                 cumulativeProb += zodiac.rate;
                 if (rand <= cumulativeProb) {
@@ -269,7 +269,7 @@ class ZodiacSystem {
                     break;
                 }
             }
-            
+
             // Fallback to first common zodiac if somehow nothing was selected
             if (!selectedZodiac) {
                 selectedZodiac = this.zodiacSigns.find(sign => sign.rarity === 'common');
@@ -282,7 +282,7 @@ class ZodiacSystem {
             const baseLoops = 3; // Minimum number of full loops
             const randomLoops = Math.floor(Math.random() * 3); // 0-2 additional loops
             const totalLoops = baseLoops + randomLoops;
-            
+
             // Calculate the final position to stop at the selected zodiac
             const selectedIndex = this.zodiacSigns.findIndex(z => z.id === selectedZodiac.id);
             const finalPosition = (totalLoops * itemsPerLoop * itemWidth) + (selectedIndex * itemWidth);
@@ -307,7 +307,7 @@ class ZodiacSystem {
                     setTimeout(() => {
                         // Remove the glow effect
                         pointer.style.boxShadow = 'none';
-                        
+
                         // Show result with flip animation
                         this.showZodiacResult(selectedZodiac, casePopup);
                     }, (3 + randomLoops * 0.5) * 1000);
@@ -338,9 +338,9 @@ class ZodiacSystem {
                 <button class="close-challenge">Đóng</button>
             </div>
         `;
-        
+
         document.body.appendChild(resultPopup);
-        
+
         // Play different sounds based on rarity
         if (zodiac.rarity === 'epic') {
             playSound('rare', 1.0);
@@ -352,31 +352,95 @@ class ZodiacSystem {
 
         // Update zodiac collection
         this.collectedZodiacs[zodiac.id - 1]++;
-        
+
         // Update game state for challenges
-        if (window.currentGameState) {
-            if (zodiac.rarity === 'epic') {
-                window.currentGameState.epicZodiacsCollected++;
-            } else if (zodiac.rarity === 'rare') {
-                window.currentGameState.rareZodiacsCollected++;
-            } else {
-                window.currentGameState.uncommonZodiacsCollected++;
-                // Check if we've collected 3 uncommon zodiacs
-                if (window.currentGameState.uncommonZodiacsCollected === 3) {
-                    // Check if this challenge exists and hasn't been completed
-                    const challengeKey = 'threeUncommonZodiacs';
-                    if (window.currentGameState.dailyChallenges[challengeKey] && 
-                        !window.currentGameState.dailyChallenges[challengeKey].completed) {
-                        window.currentGameState.dailyChallenges[challengeKey].completed = true;
-                        window.currentGameState.currentScore += window.currentGameState.dailyChallenges[challengeKey].reward;
-                        showChallengeComplete(challengeKey);
-                    }
+        if (typeof currentGameState !== 'undefined') {
+            // Calculate total counts from collectedZodiacs
+            const totalCommon = this.collectedZodiacs.filter((_, i) => this.zodiacSigns[i].rarity === 'common').reduce((a, b) => a + b, 0);
+            const totalRare = this.collectedZodiacs.filter((_, i) => this.zodiacSigns[i].rarity === 'rare').reduce((a, b) => a + b, 0);
+            const totalEpic = this.collectedZodiacs.filter((_, i) => this.zodiacSigns[i].rarity === 'epic').reduce((a, b) => a + b, 0);
+
+            // Update game state with new totals
+            currentGameState.uncommonZodiacsCollected = totalCommon;
+            currentGameState.rareZodiacsCollected = totalRare;
+            currentGameState.epicZodiacsCollected = totalEpic;
+
+            // Save the updated state
+            saveGameState();
+
+            // Check for challenge completion based on rarity
+            if (zodiac.rarity === 'common' && totalCommon === 3) {
+                const challengeKey = 'threeUncommonZodiacs';
+                if (currentGameState.dailyChallenges[challengeKey] &&
+                    !currentGameState.dailyChallenges[challengeKey].completed) {
+                    currentGameState.dailyChallenges[challengeKey].completed = true;
+                    currentGameState.currentScore += currentGameState.dailyChallenges[challengeKey].reward;
+                    
+                    // Show challenge complete notification
+                    const notification = document.createElement('div');
+                    notification.className = 'notification';
+                    notification.innerHTML = `
+                        <i class="fas fa-check-circle"></i>
+                        <span>Hoàn thành nhiệm vụ: Mở 3 cung hoàng đạo uncommon!</span>
+                    `;
+                    document.body.appendChild(notification);
+                    
+                    setTimeout(() => {
+                        notification.remove();
+                    }, 3000);
+                }
+            } else if (zodiac.rarity === 'rare' && totalRare === 2) {
+                const challengeKey = 'twoRareZodiacs';
+                if (currentGameState.dailyChallenges[challengeKey] &&
+                    !currentGameState.dailyChallenges[challengeKey].completed) {
+                    currentGameState.dailyChallenges[challengeKey].completed = true;
+                    currentGameState.currentScore += currentGameState.dailyChallenges[challengeKey].reward;
+                    
+                    // Show challenge complete notification
+                    const notification = document.createElement('div');
+                    notification.className = 'notification';
+                    notification.innerHTML = `
+                        <i class="fas fa-check-circle"></i>
+                        <span>Hoàn thành nhiệm vụ: Mở 2 cung hoàng đạo hiếm!</span>
+                    `;
+                    document.body.appendChild(notification);
+                    
+                    setTimeout(() => {
+                        notification.remove();
+                    }, 3000);
+                }
+            } else if (zodiac.rarity === 'epic' && totalEpic === 1) {
+                const challengeKey = 'oneEpicZodiac';
+                if (currentGameState.dailyChallenges[challengeKey] &&
+                    !currentGameState.dailyChallenges[challengeKey].completed) {
+                    currentGameState.dailyChallenges[challengeKey].completed = true;
+                    currentGameState.currentScore += currentGameState.dailyChallenges[challengeKey].reward;
+                    
+                    // Show challenge complete notification
+                    const notification = document.createElement('div');
+                    notification.className = 'notification';
+                    notification.innerHTML = `
+                        <i class="fas fa-check-circle"></i>
+                        <span>Hoàn thành nhiệm vụ: Mở 1 cung hoàng đạo cực hiếm!</span>
+                    `;
+                    document.body.appendChild(notification);
+                    
+                    setTimeout(() => {
+                        notification.remove();
+                    }, 3000);
                 }
             }
         }
-        
+
         this.updateZodiacDisplay();
         this.saveData();
+
+        // Log total zodiac counts after updating
+        console.log('=== Tổng số cung hoàng đạo sau khi cập nhật ===');
+        console.log('Thường:', this.collectedZodiacs.filter((_, i) => this.zodiacSigns[i].rarity === 'common').reduce((a, b) => a + b, 0));
+        console.log('Hiếm:', this.collectedZodiacs.filter((_, i) => this.zodiacSigns[i].rarity === 'rare').reduce((a, b) => a + b, 0));
+        console.log('Cực hiếm:', this.collectedZodiacs.filter((_, i) => this.zodiacSigns[i].rarity === 'epic').reduce((a, b) => a + b, 0));
+        console.log('====================================');
 
         // Remove case popup
         casePopup.remove();
@@ -385,7 +449,7 @@ class ZodiacSystem {
         setTimeout(() => {
             const card = resultPopup.querySelector('.zodiac-card');
             card.classList.add('flipped');
-            
+
             // Create a container for confetti that will be above the backpack
             const confettiContainer = document.createElement('div');
             confettiContainer.className = 'confetti-container';
@@ -397,7 +461,7 @@ class ZodiacSystem {
             confettiContainer.style.zIndex = '1500'; // Between backpack and popup
             confettiContainer.style.pointerEvents = 'none';
             document.body.appendChild(confettiContainer);
-            
+
             // Add confetti effect based on rarity
             if (zodiac.rarity === 'epic') {
                 confetti({
@@ -423,7 +487,7 @@ class ZodiacSystem {
                     zIndex: 1500
                 });
             }
-            
+
             // Remove confetti container after animation
             setTimeout(() => {
                 confettiContainer.remove();
@@ -438,7 +502,7 @@ class ZodiacSystem {
     }
 
     getRarityText(rarity) {
-        switch(rarity) {
+        switch (rarity) {
             case 'common': return 'Thường';
             case 'rare': return 'Hiếm';
             case 'epic': return 'Siêu Hiếm';
@@ -455,7 +519,7 @@ class ZodiacSystem {
     addSpecialPresent() {
         // Find existing special present slot
         const presentSlot = this.backpack.items.find(item => item && item.id === 'present');
-        
+
         if (presentSlot) {
             // If present exists, increment count
             presentSlot.count++;

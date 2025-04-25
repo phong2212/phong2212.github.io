@@ -122,18 +122,18 @@ class MemoryGame {
     generateCards(pairs) {
         const cards = [];
         const cardImages = [
-            '1.png',
-            '2.png',
-            '3.png',
-            '4.png',
-            '5.png',
-            '6.png',
-            '7.png',
-            '8.png',
-            '9.png',
-            '10.png',
-            '11.png',
-            '12.png'
+            's1.png',
+            's2.png',
+            's3.png',
+            's4.png',
+            's5.png',
+            's6.png',
+            's7.png',
+            's8.png',
+            's9.png',
+            's10.png',
+            's11.png',
+            's12.png'
         ];
 
         // Create pairs of cards

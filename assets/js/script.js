@@ -173,21 +173,21 @@ const ALL_DAILY_CHALLENGES = [
     },
     {
         id: 'twoRareZodiacs',
-        description: "Mở 2 cung hoàng đạo rare",
+        description: "Mở 2 cung hoàng đạo hiếm",
         reward: 150,
         type: 'zodiac',
         condition: (state) => state.rareZodiacsCollected >= 2
     },
     {
         id: 'oneEpicZodiac',
-        description: "Mở 1 cung hoàng đạo epic",
+        description: "Mở 1 cung hoàng đạo cực hiếm",
         reward: 250,
         type: 'zodiac',
         condition: (state) => state.epicZodiacsCollected > 0
     },
     {
         id: 'threeUncommonZodiacs',
-        description: "Mở 3 cung hoàng đạo uncommon",
+        description: "Mở 3 cung hoàng đạo thường",
         reward: 120,
         type: 'zodiac',
         condition: (state) => state.uncommonZodiacsCollected >= 3
@@ -231,7 +231,6 @@ let currentGameState = {
         memory: false,
         dash: false
     },
-    allBoxesOpened: false,
     rareZodiacsCollected: 0,
     epicZodiacsCollected: 0,
     uncommonZodiacsCollected: 0
@@ -623,7 +622,7 @@ function updateUnlockedDisplay() {
     Object.entries(currentGameState.teddyCounts).forEach(([name, count]) => {
         const teddy = teddies.find(t => t.name === name);
         if (teddy) {
-        const unlockedItem = document.createElement('div');
+            const unlockedItem = document.createElement('div');
             unlockedItem.className = `unlocked-item ${teddy.rarity === 'rare' ? 'shiny' : ''}`;
             
             const teddyInfo = document.createElement('div');
@@ -649,7 +648,7 @@ function updateUnlockedDisplay() {
                 unlockedItem.appendChild(countSpan);
             }
             
-        unlockedContainer.appendChild(unlockedItem);
+            unlockedContainer.appendChild(unlockedItem);
         }
     });
 }
@@ -722,13 +721,77 @@ window.showDailyChallenges = function() {
             <button class="close-challenges"><i class="fas fa-times"></i></button>
         </div>
         <div class="challenges-list">
-            ${Object.entries(currentGameState.dailyChallenges).map(([key, challenge]) => `
-                <div class="challenge-item ${challenge.completed ? 'completed' : ''}">
-                    <i class="fas ${challenge.completed ? 'fa-check-circle' : 'fa-circle'}"></i>
-                    <span>${challenge.description}</span>
-                    <span class="reward">+${challenge.reward} exp</span>
-                </div>
-            `).join('')}
+            ${Object.entries(currentGameState.dailyChallenges).map(([key, challenge]) => {
+                let progress = 0;
+                let maxProgress = 1;
+                
+                // Calculate progress for each challenge type
+                if (challenge.id === 'threeUncommonZodiacs') {
+                    progress = currentGameState.uncommonZodiacsCollected;
+                    maxProgress = 3;
+                } else if (challenge.id === 'twoRareZodiacs') {
+                    progress = currentGameState.rareZodiacsCollected;
+                    maxProgress = 2;
+                } else if (challenge.id === 'oneEpicZodiac') {
+                    progress = currentGameState.epicZodiacsCollected;
+                    maxProgress = 1;
+                } else if (challenge.id === 'score1000') {
+                    progress = Math.min(currentGameState.currentScore, 1000);
+                    maxProgress = 1000;
+                } else if (challenge.id === 'score1500') {
+                    progress = Math.min(currentGameState.currentScore, 1500);
+                    maxProgress = 1500;
+                } else if (challenge.id === 'score2000') {
+                    progress = Math.min(currentGameState.currentScore, 2000);
+                    maxProgress = 2000;
+                } else if (challenge.id === 'score2500') {
+                    progress = Math.min(currentGameState.currentScore, 2500);
+                    maxProgress = 2500;
+                } else if (challenge.id === 'score3000') {
+                    progress = Math.min(currentGameState.currentScore, 3000);
+                    maxProgress = 3000;
+                } else if (challenge.id === 'twoSameTeddies') {
+                    const counts = Object.values(currentGameState.teddyCounts);
+                    progress = counts.length > 0 ? Math.min(Math.max(...counts), 2) : 0;
+                    maxProgress = 2;
+                } else if (challenge.id === 'threeSameTeddies') {
+                    const counts = Object.values(currentGameState.teddyCounts);
+                    progress = counts.length > 0 ? Math.min(Math.max(...counts), 3) : 0;
+                    maxProgress = 3;
+                } else if (challenge.id === 'threeDifferentTeddies') {
+                    progress = Math.min(Object.keys(currentGameState.teddyCounts).length, 3);
+                    maxProgress = 3;
+                } else if (challenge.id === 'earn200Coins') {
+                    progress = Math.min(currentGameState.moneyEarned, 200);
+                    maxProgress = 200;
+                } else if (challenge.id === 'earn500Coins') {
+                    progress = Math.min(currentGameState.moneyEarned, 500);
+                    maxProgress = 500;
+                } else if (challenge.id === 'earn800Coins') {
+                    progress = Math.min(currentGameState.moneyEarned, 800);
+                    maxProgress = 800;
+                } else if (challenge.id === 'earn1000Coins') {
+                    progress = Math.min(currentGameState.moneyEarned, 1000);
+                    maxProgress = 1000;
+                } else if (challenge.id === 'openSpecialPresent') {
+                    progress = Math.min(currentGameState.specialPresentsOpened, 1);
+                    maxProgress = 1;
+                }
+
+                const progressPercent = (progress / maxProgress) * 100;
+                
+                return `
+                    <div class="challenge-item ${challenge.completed ? 'completed' : ''}">
+                        <i class="fas ${challenge.completed ? 'fa-check-circle' : 'fa-circle'}"></i>
+                        <span>${challenge.description}</span>
+                        <div class="challenge-progress">
+                            <div class="progress-bar" style="width: ${progressPercent}%"></div>
+                            <span class="progress-text">${progress}/${maxProgress}</span>
+                        </div>
+                        <span class="reward">+${challenge.reward} exp</span>
+                    </div>
+                `;
+            }).join('')}
         </div>
     `;
     
@@ -809,13 +872,41 @@ function unboxTeddy(index) {
             currentGameState.allBoxesOpened = true;
         }
         
-        // Check challenges
-        checkChallenges();
-
         // Add score
         const score = TEDDY_SCORES[teddy.name];
         currentGameState.currentScore += score;
         updateMovesAndScore();
+
+        // Check for score1000 challenge completion
+        if (currentGameState.currentScore >= 1000) {
+            const challengeKey = 'score1000';
+            if (currentGameState.dailyChallenges[challengeKey] &&
+                !currentGameState.dailyChallenges[challengeKey].completed) {
+                currentGameState.dailyChallenges[challengeKey].completed = true;
+                currentGameState.currentScore += currentGameState.dailyChallenges[challengeKey].reward;
+                
+                // Show challenge complete notification
+                const notification = document.createElement('div');
+                notification.className = 'notification';
+                notification.innerHTML = `
+                    <i class="fas fa-check-circle"></i>
+                    <span>Hoàn thành nhiệm vụ: Kiếm điểm trong game Xé Túi Mù đạt 1000 điểm!</span>
+                `;
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.remove();
+                }, 3000);
+
+                // Save updated challenges
+                const savedChallenges = localStorage.getItem('dailyChallenges');
+                if (savedChallenges) {
+                    const parsed = JSON.parse(savedChallenges);
+                    parsed.challenges = currentGameState.dailyChallenges;
+                    localStorage.setItem('dailyChallenges', JSON.stringify(parsed));
+                }
+            }
+        }
 
         if (teddy.rarity === 'rare') {
             confetti({
@@ -1266,7 +1357,20 @@ function saveGameState() {
         previousScore: currentGameState.previousScore,
         lastPlayDate: currentGameState.lastPlayDate,
         unlockedTeddies: currentGameState.unlockedTeddies,
-        teddyCounts: currentGameState.teddyCounts
+        teddyCounts: currentGameState.teddyCounts,
+        movesLeft: currentGameState.movesLeft,
+        hasPicked: currentGameState.hasPicked,
+        boxes: currentGameState.boxes,
+        gamesCompleted: currentGameState.gamesCompleted,
+        rareZodiacsCollected: currentGameState.rareZodiacsCollected,
+        epicZodiacsCollected: currentGameState.epicZodiacsCollected,
+        uncommonZodiacsCollected: currentGameState.uncommonZodiacsCollected,
+        specialPresentsOpened: currentGameState.specialPresentsOpened,
+        moneyEarned: currentGameState.moneyEarned,
+        leveledUp: currentGameState.leveledUp,
+        newZodiacs: currentGameState.newZodiacs,
+        zodiacs: currentGameState.zodiacs,
+        memory: currentGameState.memory
     };
     localStorage.setItem(`gameState_${currentGameState.playerName}`, JSON.stringify(gameState));
 
@@ -1291,10 +1395,10 @@ function loadGameState() {
             }
         }
 
+        // Merge saved state with current state, preserving any new properties
         currentGameState = {
             ...currentGameState,
-            ...parsedState,
-            hasPicked: false // Reset hasPicked on load
+            ...parsedState
         };
     } else {
         // If no player-specific state, load from general level data
