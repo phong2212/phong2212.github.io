@@ -1297,6 +1297,34 @@ function loadGameState() {
         }
     }
 
+    // Check for temporary exp and coins from memory game
+    const tempExp = parseInt(localStorage.getItem('tempExp') || '0');
+    const tempXu = parseInt(localStorage.getItem('tempXu') || '0');
+    
+    console.log('Script - Current state before adding rewards:');
+    console.log('Current exp:', currentGameState.experience);
+    console.log('Current coins:', window.zodiacSystem ? window.zodiacSystem.backpack.money : 'N/A');
+    console.log('Found tempExp:', tempExp);
+    console.log('Found tempXu:', tempXu);
+    
+    if (tempExp > 0) {
+        console.log('Script - Adding exp:', tempExp);
+        addExperience(tempExp);
+        console.log('Script - New exp after adding:', currentGameState.experience);
+        localStorage.removeItem('tempExp');
+        console.log('Script - tempExp after removal:', localStorage.getItem('tempExp'));
+    }
+    
+    if (tempXu > 0) {
+        if (window.zodiacSystem) {
+            console.log('Script - Adding coins:', tempXu);
+            window.zodiacSystem.addMoney(tempXu);
+            console.log('Script - New coins after adding:', window.zodiacSystem.backpack.money);
+        }
+        localStorage.removeItem('tempXu');
+        console.log('Script - tempXu after removal:', localStorage.getItem('tempXu'));
+    }
+
     // Update UI based on loaded state
     updateMovesAndScore();
     updateUnlockedDisplay();

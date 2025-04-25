@@ -330,16 +330,17 @@ class MemoryGame {
                 break;
         }
 
-        // Update experience in localStorage
-        const currentExp = parseInt(localStorage.getItem('experience') || '0');
-        const newExp = currentExp + expGained;
-        localStorage.setItem('experience', newExp.toString());
-
-        // Add coins to zodiac system
-        if (window.zodiacSystem) {
-            window.zodiacSystem.addMoney(coinsGained);
-            currentGameState.moneyEarned += coinsGained;
-        }
+        // Save temporary exp and coins
+        console.log('Memory Game - Saving temporary rewards:');
+        console.log('Exp to save:', expGained);
+        console.log('Coins to save:', coinsGained);
+        
+        localStorage.setItem('tempExp', expGained.toString());
+        localStorage.setItem('tempXu', coinsGained.toString());
+        
+        console.log('Memory Game - Saved to localStorage:');
+        console.log('tempExp:', localStorage.getItem('tempExp'));
+        console.log('tempXu:', localStorage.getItem('tempXu'));
 
         // Check for zodiac card reward
         let zodiacReward = null;
