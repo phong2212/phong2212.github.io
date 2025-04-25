@@ -663,7 +663,17 @@ function playSound(type, volume = 1) {
 
 function updateDailyChallenges() {
     const today = new Date().toDateString();
-    if (currentGameState.lastPlayDate !== today) {
+    const savedChallenges = localStorage.getItem('dailyChallenges');
+    let savedDate = null;
+    let savedChallengesData = null;
+
+    if (savedChallenges) {
+        const parsed = JSON.parse(savedChallenges);
+        savedDate = parsed.date;
+        savedChallengesData = parsed.challenges;
+    }
+
+    if (savedDate !== today) {
         // Reset challenges for new day
         currentGameState.dailyChallenges = {};
         
@@ -683,9 +693,18 @@ function updateDailyChallenges() {
             availableChallenges.splice(randomIndex, 1);
         }
         
-        currentGameState.lastPlayDate = today;
-        saveGameState();
+        // Save new challenges with today's date
+        localStorage.setItem('dailyChallenges', JSON.stringify({
+            date: today,
+            challenges: currentGameState.dailyChallenges
+        }));
+    } else {
+        // Load saved challenges for today
+        currentGameState.dailyChallenges = savedChallengesData;
     }
+    
+    currentGameState.lastPlayDate = today;
+    saveGameState();
 }
 
 // Make showDailyChallenges function globally accessible
@@ -1245,7 +1264,6 @@ function saveGameState() {
         experienceToNextLevel: currentGameState.experienceToNextLevel,
         currentScore: currentGameState.currentScore,
         previousScore: currentGameState.previousScore,
-        dailyChallenges: currentGameState.dailyChallenges,
         lastPlayDate: currentGameState.lastPlayDate,
         unlockedTeddies: currentGameState.unlockedTeddies,
         teddyCounts: currentGameState.teddyCounts
@@ -1264,19 +1282,13 @@ function loadGameState() {
     if (savedState) {
         const parsedState = JSON.parse(savedState);
         
-        // Restore daily challenges with their condition functions
-        if (parsedState.dailyChallenges) {
-            const restoredChallenges = {};
-            Object.entries(parsedState.dailyChallenges).forEach(([key, challenge]) => {
-                const originalChallenge = ALL_DAILY_CHALLENGES.find(c => c.id === key);
-                if (originalChallenge) {
-                    restoredChallenges[key] = {
-                        ...challenge,
-                        condition: originalChallenge.condition
-                    };
-                }
-            });
-            parsedState.dailyChallenges = restoredChallenges;
+        // Load daily challenges from separate storage
+        const savedChallenges = localStorage.getItem('dailyChallenges');
+        if (savedChallenges) {
+            const parsedChallenges = JSON.parse(savedChallenges);
+            if (parsedChallenges.date === new Date().toDateString()) {
+                currentGameState.dailyChallenges = parsedChallenges.challenges;
+            }
         }
 
         currentGameState = {
@@ -1580,10 +1592,13 @@ function showWelcomeGift() {
 }
 
 function checkChallenges() {
+    let challengesUpdated = false;
+    
     Object.entries(currentGameState.dailyChallenges).forEach(([key, challenge]) => {
         if (!challenge.completed && challenge.condition(currentGameState)) {
             challenge.completed = true;
             currentGameState.currentScore += challenge.reward;
+            challengesUpdated = true;
             
             // Show completion notification
             const completionPopup = document.createElement('div');
@@ -1625,4 +1640,14 @@ function checkChallenges() {
             });
         }
     });
+
+    // Save updated challenges if any were completed
+    if (challengesUpdated) {
+        const savedChallenges = localStorage.getItem('dailyChallenges');
+        if (savedChallenges) {
+            const parsed = JSON.parse(savedChallenges);
+            parsed.challenges = currentGameState.dailyChallenges;
+            localStorage.setItem('dailyChallenges', JSON.stringify(parsed));
+        }
+    }
 }
