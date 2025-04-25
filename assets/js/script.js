@@ -116,20 +116,26 @@ const ALL_DAILY_CHALLENGES = [
         condition: (state) => state.currentScore >= 3000
     },
     {
-        id: 'twoSameTeddies',
-        description: "Mở hộp được 2 gấu bông giống nhau",
-        reward: 60,
-        type: 'teddy',
-        condition: (state) => Object.values(state.teddyCounts).some(count => count >= 2)
-    },
-    {
-        id: 'threeSameTeddies',
-        description: "Mở hộp được 3 gấu bông giống nhau",
+        id: 'twoIdenticalTeddies',
+        description: "Mở được 2 gấu bông giống nhau trong một lượt chơi",
         reward: 100,
         type: 'teddy',
-        condition: (state) => Object.values(state.teddyCounts).some(count => count >= 3)
+        condition: (state) => {
+            return Object.values(state.teddyCounts).some(count => count >= 2);
+        }
     },
     {
+        id: 'threeIdenticalTeddies',
+        description: "Mở được 3 gấu bông giống nhau trong một lượt chơi",
+        reward: 200,
+        type: 'teddy',
+        condition: (state) => {
+            return Object.values(state.teddyCounts).some(count => count >= 3);
+        }
+    },
+    {
+
+
         id: 'secretTeddy',
         description: "Mở hộp được gấu bông secret",
         reward: 200,
@@ -950,6 +956,40 @@ function unboxTeddy(index) {
                 !currentGameState.dailyChallenges[challengeKey].completed) {
                 currentGameState.dailyChallenges[challengeKey].completed = true;
                 showCompletionNotification(currentGameState.dailyChallenges[challengeKey]);
+            }
+        }
+
+        // Check for two identical teddies challenge completion
+        if (currentGameState.teddyCounts[teddy.name] === 2) {
+            const challengeKey = 'twoIdenticalTeddies';
+            if (currentGameState.dailyChallenges[challengeKey] &&
+                !currentGameState.dailyChallenges[challengeKey].completed) {
+                currentGameState.dailyChallenges[challengeKey].completed = true;
+                showCompletionNotification(currentGameState.dailyChallenges[challengeKey]);
+                // Save updated challenges to localStorage
+                const savedChallenges = localStorage.getItem('dailyChallenges');
+                if (savedChallenges) {
+                    const parsed = JSON.parse(savedChallenges);
+                    parsed.challenges = currentGameState.dailyChallenges;
+                    localStorage.setItem('dailyChallenges', JSON.stringify(parsed));
+                }
+            }
+        }
+
+        // Check for three identical teddies challenge completion
+        if (currentGameState.teddyCounts[teddy.name] === 3) {
+            const challengeKey = 'threeIdenticalTeddies';
+            if (currentGameState.dailyChallenges[challengeKey] &&
+                !currentGameState.dailyChallenges[challengeKey].completed) {
+                currentGameState.dailyChallenges[challengeKey].completed = true;
+                showCompletionNotification(currentGameState.dailyChallenges[challengeKey]);
+                // Save updated challenges to localStorage
+                const savedChallenges = localStorage.getItem('dailyChallenges');
+                if (savedChallenges) {
+                    const parsed = JSON.parse(savedChallenges);
+                    parsed.challenges = currentGameState.dailyChallenges;
+                    localStorage.setItem('dailyChallenges', JSON.stringify(parsed));
+                }
             }
         }
 

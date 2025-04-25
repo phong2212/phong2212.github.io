@@ -44,23 +44,6 @@ class MemoryGame {
         const difficultySelect = document.querySelector('.difficulty-select');
         const container = document.querySelector('.container');
         
-        // Add back button to difficulty selection
-        const backButton = document.createElement('button');
-        backButton.className = 'back-to-select';
-        backButton.innerHTML = '<i class="fas fa-arrow-left"></i><span>Quay lại</span>';
-        backButton.addEventListener('click', () => {
-            const transition = document.querySelector('.game-transition');
-            transition.style.display = 'flex';
-            transition.style.opacity = '1';
-            transition.style.zIndex = '9999';
-            transition.querySelector('.game-transition-text').textContent = 'Đang rời game...';
-            
-            setTimeout(() => {
-                window.location.href = 'index.html';
-            }, 2000);
-        });
-        difficultySelect.appendChild(backButton);
-        
         // Handle difficulty selection
         document.querySelectorAll('.difficulty-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -73,21 +56,50 @@ class MemoryGame {
             });
         });
 
+        // Add select mode button functionality
+        const selectModeBtn = document.querySelector('.select-mode-btn');
+        selectModeBtn.addEventListener('click', () => {
+            if (this.isPlaying) {
+                clearInterval(this.timerInterval);
+                this.isPlaying = false;
+                container.style.display = 'none';
+                difficultySelect.style.display = 'flex';
+            }
+        });
+
+        // Add exit game button functionality
+        const exitGameBtn = document.querySelector('.exit-game');
+        exitGameBtn.addEventListener('click', () => {
+            this.handleBackToSelect();
+        });
+
         // Add back button functionality in game
         const gameBackButton = document.querySelector('.container .back-to-select');
         if (gameBackButton) {
             gameBackButton.addEventListener('click', () => {
-                const transition = document.querySelector('.game-transition');
-                transition.style.display = 'flex';
-                transition.style.opacity = '1';
-                transition.style.zIndex = '9999';
-                transition.querySelector('.game-transition-text').textContent = 'Đang rời game...';
-                
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 2000);
+                this.handleBackToSelect();
             });
         }
+
+        // Add back button functionality in difficulty selection
+        const difficultyBackButton = document.querySelector('.difficulty-header .back-to-select');
+        if (difficultyBackButton) {
+            difficultyBackButton.addEventListener('click', () => {
+                this.handleBackToSelect();
+            });
+        }
+
+        // Add exit game button functionality for level complete
+        const levelCompleteExitGame = document.querySelector('.level-complete .exit-game');
+        levelCompleteExitGame.addEventListener('click', () => {
+            this.handleBackToSelect();
+        });
+
+        // Add exit game button functionality for time up
+        const timeUpExitGame = document.querySelector('.time-up .exit-game');
+        timeUpExitGame.addEventListener('click', () => {
+            this.handleBackToSelect();
+        });
     }
 
     loadLevel() {
@@ -395,8 +407,12 @@ class MemoryGame {
             zodiacMessage.textContent = `+${zodiacReward}`;
             levelCompleteContent.appendChild(zodiacMessage);
         }
-        
-        // Add play again button after all messages
+
+        // Create and add buttons container
+        const buttonsContainer = document.createElement('div');
+        buttonsContainer.className = 'level-complete-buttons';
+
+        // Create play again button
         const playAgainButton = document.createElement('button');
         playAgainButton.className = 'play-again';
         playAgainButton.innerHTML = '<i class="fas fa-redo"></i> Chơi Lại';
@@ -417,7 +433,21 @@ class MemoryGame {
             this.startTimer();
             levelComplete.style.display = 'none';
         });
-        levelCompleteContent.appendChild(playAgainButton);
+
+        // Create exit button
+        const exitButton = document.createElement('button');
+        exitButton.className = 'exit-game';
+        exitButton.innerHTML = '<i class="fas fa-sign-out-alt"></i> Thoát';
+        exitButton.addEventListener('click', () => {
+            this.handleBackToSelect();
+        });
+
+        // Add buttons to container
+        buttonsContainer.appendChild(playAgainButton);
+        buttonsContainer.appendChild(exitButton);
+
+        // Add buttons container to content
+        levelCompleteContent.appendChild(buttonsContainer);
 
         levelComplete.style.display = 'flex';
         confetti();
@@ -473,21 +503,22 @@ class MemoryGame {
 
     handleTimeUp() {
         this.isPlaying = false;
-        const levelComplete = document.querySelector('.level-complete');
-        const levelCompleteContent = document.querySelector('.level-complete-content');
+        clearInterval(this.timerInterval);
         
-        // Update content for time up screen
-        levelCompleteContent.innerHTML = `
-            <h2>Hết thời gian!</h2>
-            <p>Bạn đã không hoàn thành level!</p>
-            <div class="stats">
-                <p>Thời gian: <span class="final-time">00:00</span></p>
-                <p>Lượt: <span class="final-moves">${this.moves}</span></p>
-                <p>Điểm: <span class="final-score">${this.score}</span></p>
-            </div>
-        `;
-        
-        // Add play again button
+        const timeUp = document.querySelector('.time-up');
+        const finalTime = document.querySelector('.time-up .final-time');
+        const finalMoves = document.querySelector('.time-up .final-moves');
+        const finalScore = document.querySelector('.time-up .final-score');
+
+        finalTime.textContent = this.formatTime(this.timer);
+        finalMoves.textContent = this.moves;
+        finalScore.textContent = this.score;
+
+        // Create and add buttons container
+        const buttonsContainer = document.createElement('div');
+        buttonsContainer.className = 'time-up-buttons';
+
+        // Create play again button
         const playAgainButton = document.createElement('button');
         playAgainButton.className = 'play-again';
         playAgainButton.innerHTML = '<i class="fas fa-redo"></i> Chơi Lại';
@@ -506,11 +537,37 @@ class MemoryGame {
             // Reload level and start timer
             this.loadLevel();
             this.startTimer();
-            levelComplete.style.display = 'none';
+            timeUp.style.display = 'none';
         });
-        levelCompleteContent.appendChild(playAgainButton);
 
-        levelComplete.style.display = 'flex';
+        // Create exit button
+        const exitButton = document.createElement('button');
+        exitButton.className = 'exit-game';
+        exitButton.innerHTML = '<i class="fas fa-sign-out-alt"></i> Thoát';
+        exitButton.addEventListener('click', () => {
+            this.handleBackToSelect();
+        });
+
+        // Add buttons to container
+        buttonsContainer.appendChild(playAgainButton);
+        buttonsContainer.appendChild(exitButton);
+
+        // Update the time up content
+        const timeUpContent = document.querySelector('.time-up-content');
+        timeUpContent.innerHTML = `
+            <h2>Hết thời gian!</h2>
+            <p>Bạn đã không hoàn thành level!</p>
+            <div class="stats">
+                <p>Thời gian: <span class="final-time">${this.formatTime(this.timer)}</span></p>
+                <p>Lượt: <span class="final-moves">${this.moves}</span></p>
+                <p>Điểm: <span class="final-score">${this.score}</span></p>
+            </div>
+        `;
+
+        // Add buttons container to content
+        timeUpContent.appendChild(buttonsContainer);
+
+        timeUp.style.display = 'flex';
     }
 
     saveProgress() {
