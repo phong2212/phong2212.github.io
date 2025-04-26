@@ -168,53 +168,56 @@ class ZodiacSystem {
     handleBackpackSlotClick(index) {
         const item = this.backpack.items[index];
         if (item) {
-            // Show confirmation popup
-            const confirmPopup = document.createElement('div');
-            confirmPopup.className = 'challenge-complete';
-            confirmPopup.innerHTML = `
-                <div class="challenge-content">
-                    <i class="fas fa-gift"></i>
-                    <h3>Mở Hộp Quà Đặc Biệt</h3>
-                    <p>Bạn có muốn mở hộp quà đặc biệt không?</p>
-                    <div class="challenge-rewards">
-                        <div class="reward-item">
-                            <i class="fas fa-gift"></i>
-                            <span>Hộp quà đặc biệt x1</span>
+            // Check if item is a special present
+            if (item.id === 'present' || item.type === 'present') {
+                // Show confirmation popup
+                const confirmPopup = document.createElement('div');
+                confirmPopup.className = 'challenge-complete';
+                confirmPopup.innerHTML = `
+                    <div class="challenge-content">
+                        <i class="fas fa-gift"></i>
+                        <h3>Mở Hộp Quà Đặc Biệt</h3>
+                        <p>Bạn có muốn mở hộp quà đặc biệt không?</p>
+                        <div class="challenge-rewards">
+                            <div class="reward-item">
+                                <i class="fas fa-gift"></i>
+                                <span>Hộp quà đặc biệt x1</span>
+                            </div>
+                        </div>
+                        <div class="game-over-buttons">
+                            <button class="game-over-button play-again">Có</button>
+                            <button class="game-over-button close">Không</button>
                         </div>
                     </div>
-                    <div class="game-over-buttons">
-                        <button class="game-over-button play-again">Có</button>
-                        <button class="game-over-button close">Không</button>
-                    </div>
-                </div>
-            `;
+                `;
 
-            document.body.appendChild(confirmPopup);
-            playSound('click', 0.5);
+                document.body.appendChild(confirmPopup);
+                playSound('click', 0.5);
 
-            // Handle button clicks
-            const yesButton = confirmPopup.querySelector('.play-again');
-            const noButton = confirmPopup.querySelector('.close');
+                // Handle button clicks
+                const yesButton = confirmPopup.querySelector('.play-again');
+                const noButton = confirmPopup.querySelector('.close');
 
-            yesButton.addEventListener('click', () => {
-                confirmPopup.remove();
-                // Increment special presents opened counter
-                if (typeof currentGameState !== 'undefined') {
-                    currentGameState.specialPresentsOpened++;
-                    // Check for challenge completion
-                    const challengeKey = 'openSpecialPresent';
-                    if (currentGameState.dailyChallenges[challengeKey] &&
-                        !currentGameState.dailyChallenges[challengeKey].completed) {
-                        currentGameState.dailyChallenges[challengeKey].completed = true;
-                        showCompletionNotification(currentGameState.dailyChallenges[challengeKey]);
+                yesButton.addEventListener('click', () => {
+                    confirmPopup.remove();
+                    // Increment special presents opened counter
+                    if (typeof currentGameState !== 'undefined') {
+                        currentGameState.specialPresentsOpened++;
+                        // Check for challenge completion
+                        const challengeKey = 'openSpecialPresent';
+                        if (currentGameState.dailyChallenges[challengeKey] &&
+                            !currentGameState.dailyChallenges[challengeKey].completed) {
+                            currentGameState.dailyChallenges[challengeKey].completed = true;
+                            showCompletionNotification(currentGameState.dailyChallenges[challengeKey]);
+                        }
                     }
-                }
-                this.showWheelOfFortune(item);
-            });
+                    this.showWheelOfFortune(item);
+                });
 
-            noButton.addEventListener('click', () => {
-                confirmPopup.remove();
-            });
+                noButton.addEventListener('click', () => {
+                    confirmPopup.remove();
+                });
+            }
         }
     }
 

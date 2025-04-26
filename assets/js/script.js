@@ -57,14 +57,14 @@ const teddies = [
 
 // Score configuration for each teddy
 const TEDDY_SCORES = {
-    "Công Chúa Hồng": 100,
-    "Gấu Xanh Dâu": 150,
-    "Gấu Dâu Tây": 200,
-    "Gấu Kẹo Bông": 250,
-    "Gấu Mật Ong": 300,
-    "Gấu Cầu Vồng": 350,
-    "Gấu Kẹo Dẻo": 400,
-    "Gấu Bánh Cupcake": 450,
+    "Công Chúa Hồng": 250,
+    "Gấu Xanh Dâu": 300,
+    "Gấu Dâu Tây": 350,
+    "Gấu Kẹo Bông": 400,
+    "Gấu Mật Ong": 450,
+    "Gấu Cầu Vồng": 500,
+    "Gấu Kẹo Dẻo": 600,
+    "Gấu Bánh Cupcake": 750,
     "Kỳ Lân Vàng": 1000 // Secret bear
 };
 
@@ -134,8 +134,6 @@ const ALL_DAILY_CHALLENGES = [
         }
     },
     {
-
-
         id: 'secretTeddy',
         description: "Mở hộp được gấu bông secret",
         reward: 200,
@@ -913,6 +911,7 @@ function unboxTeddy(index) {
         if (window.zodiacSystem) {
             window.zodiacSystem.addMoney(50);
             currentGameState.moneyEarned += 50;
+            checkMoneyChallenges();
         }
     } else {
         playSound('common', 0.6);
@@ -923,6 +922,7 @@ function unboxTeddy(index) {
         if (window.zodiacSystem) {
             window.zodiacSystem.addMoney(10);
             currentGameState.moneyEarned += 10;
+            checkMoneyChallenges();
         }
     }
 
@@ -1122,32 +1122,7 @@ function showGameOver() {
     if (window.zodiacSystem) {
         window.zodiacSystem.addMoney(coinsGained);
         currentGameState.moneyEarned += coinsGained;
-
-        // Check for money-related challenges
-        const moneyChallenges = [
-            { key: 'earn200Coins', amount: 200 },
-            { key: 'earn500Coins', amount: 500 },
-            { key: 'earn800Coins', amount: 800 },
-            { key: 'earn1000Coins', amount: 1000 }
-        ];
-
-        moneyChallenges.forEach(challenge => {
-            if (currentGameState.moneyEarned >= challenge.amount) {
-                if (currentGameState.dailyChallenges[challenge.key] &&
-                    !currentGameState.dailyChallenges[challenge.key].completed) {
-                    currentGameState.dailyChallenges[challenge.key].completed = true;
-                    showCompletionNotification(currentGameState.dailyChallenges[challenge.key]);
-                    
-                    // Save updated challenges to localStorage
-                    const savedChallenges = localStorage.getItem('dailyChallenges');
-                    if (savedChallenges) {
-                        const parsed = JSON.parse(savedChallenges);
-                        parsed.challenges = currentGameState.dailyChallenges;
-                        localStorage.setItem('dailyChallenges', JSON.stringify(parsed));
-                    }
-                }
-            }
-        });
+        checkMoneyChallenges();
     }
 
     // Check for zodiac card reward
@@ -1592,7 +1567,11 @@ function loadGameState() {
         if (window.zodiacSystem) {
             console.log('Script - Adding coins:', tempXu);
             window.zodiacSystem.addMoney(tempXu);
+            currentGameState.moneyEarned += tempXu; // Add tempXu to moneyEarned
             console.log('Script - New coins after adding:', window.zodiacSystem.backpack.money);
+            console.log('Script - New moneyEarned after adding:', currentGameState.moneyEarned);
+            // Check money challenges after adding tempXu
+            checkMoneyChallenges();
         }
         localStorage.removeItem('tempXu');
         console.log('Script - tempXu after removal:', localStorage.getItem('tempXu'));
@@ -1779,6 +1758,8 @@ function showWelcomeGift() {
                 window.zodiacSystem.addMoney(100);
                 window.zodiacSystem.addSpecialPresent();
                 currentGameState.moneyEarned += 100;
+                // Check money challenges and show completion notification
+                checkMoneyChallenges();
             }
             addExperience(10);
             
@@ -1844,6 +1825,8 @@ function showWelcomeGift() {
                                 window.zodiacSystem.addSpecialPresent();
                             }
                             currentGameState.moneyEarned += 500;
+                            // Check money challenges and show completion notification
+                            checkMoneyChallenges();
                         }
                         addExperience(300);
                         
@@ -1854,3 +1837,184 @@ function showWelcomeGift() {
         });
     });
 }
+
+// Add new function to check money challenges
+function checkMoneyChallenges() {
+    const moneyChallenges = [
+        { key: 'earn200Coins', amount: 200 },
+        { key: 'earn500Coins', amount: 500 },
+        { key: 'earn800Coins', amount: 800 },
+        { key: 'earn1000Coins', amount: 1000 }
+    ];
+
+    moneyChallenges.forEach(challenge => {
+        if (currentGameState.moneyEarned >= challenge.amount) {
+            if (currentGameState.dailyChallenges[challenge.key] &&
+                !currentGameState.dailyChallenges[challenge.key].completed) {
+                currentGameState.dailyChallenges[challenge.key].completed = true;
+                showCompletionNotification(currentGameState.dailyChallenges[challenge.key]);
+                
+                // Save updated challenges to localStorage
+                const savedChallenges = localStorage.getItem('dailyChallenges');
+                if (savedChallenges) {
+                    const parsed = JSON.parse(savedChallenges);
+                    parsed.challenges = currentGameState.dailyChallenges;
+                    localStorage.setItem('dailyChallenges', JSON.stringify(parsed));
+                }
+            }
+        }
+    });
+}
+
+function showMarket() {
+    const marketScreen = document.querySelector('.market-screen');
+    marketScreen.classList.add('show');
+    updateMarketMoney();
+    loadMarketState();
+}
+
+function hideMarket() {
+    const marketScreen = document.querySelector('.market-screen');
+    if (marketScreen) {
+        marketScreen.classList.remove('show');
+    }
+}
+
+function updateMarketMoney() {
+    const zodiacSystem = window.zodiacSystem;
+    if (zodiacSystem) {
+        const money = zodiacSystem.backpack.money;
+        const moneyDisplay = document.getElementById('marketMoney');
+        if (moneyDisplay) {
+            moneyDisplay.textContent = money;
+        }
+    }
+}
+
+function updateMarketItems() {
+    const marketItems = document.querySelectorAll('.market-item');
+    const backpack = JSON.parse(localStorage.getItem('backpack')) || { items: [] };
+    
+    marketItems.forEach(item => {
+        const itemId = item.querySelector('img').src.split('/').pop().replace('.png', '');
+        const isSold = backpack.items.some(backpackItem => backpackItem.id === itemId);
+        
+        if (isSold) {
+            item.classList.add('sold');
+            item.querySelector('.buy-button').disabled = true;
+        } else {
+            item.classList.remove('sold');
+            item.querySelector('.buy-button').disabled = false;
+        }
+    });
+}
+
+function showNotification(message, isSuccess = true) {
+    const notification = document.createElement('div');
+    notification.className = 'market-notification';
+    notification.textContent = message;
+    notification.style.color = isSuccess ? '#4CAF50' : '#f44336';
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 2000);
+}
+
+function saveMarketState() {
+    const marketItems = document.querySelectorAll('.market-item');
+    const marketState = Array.from(marketItems).map(item => ({
+        id: item.querySelector('img').src.split('/').pop().replace('.png', ''),
+        sold: item.classList.contains('sold')
+    }));
+    localStorage.setItem('marketState', JSON.stringify(marketState));
+}
+
+function loadMarketState() {
+    const marketState = JSON.parse(localStorage.getItem('marketState')) || [];
+    const marketItems = document.querySelectorAll('.market-item');
+    
+    marketItems.forEach(item => {
+        const itemId = item.querySelector('img').src.split('/').pop().replace('.png', '');
+        const itemState = marketState.find(state => state.id === itemId);
+        
+        if (itemState && itemState.sold) {
+            item.classList.add('sold');
+            item.querySelector('.buy-button').disabled = true;
+        }
+    });
+}
+
+function buyItem(itemElement) {
+    const zodiacSystem = window.zodiacSystem;
+    if (!zodiacSystem) return;
+
+    const price = parseInt(itemElement.querySelector('.item-price span').textContent);
+    const money = zodiacSystem.backpack.money;
+    
+    if (money >= price) {
+        // Subtract money using zodiac system
+        zodiacSystem.addMoney(-price);
+        
+        // Add item to backpack using zodiac system
+        const imgSrc = itemElement.querySelector('img').src;
+        const itemId = imgSrc.split('/').pop().replace('.png', '');
+        const itemName = itemElement.querySelector('img').alt;
+        
+        // Find empty slot in backpack
+        const emptySlot = zodiacSystem.backpack.items.findIndex(item => item === null);
+        if (emptySlot !== -1) {
+            zodiacSystem.backpack.items[emptySlot] = {
+                id: itemId,
+                name: itemName,
+                count: 1,
+                type: 'market'
+            };
+            zodiacSystem.updateBackpackDisplay();
+        } else {
+            showNotification('Ba lô đã đầy!', false);
+            return;
+        }
+        
+        // Update UI
+        itemElement.classList.add('sold');
+        itemElement.querySelector('.buy-button').disabled = true;
+        
+        // Save market state
+        saveMarketState();
+        
+        // Update money display
+        updateMarketMoney();
+        
+        // Show success message
+        showNotification('Mua thành công!', true);
+        playSound('success', 0.5);
+    } else {
+        // Show not enough money message
+        showNotification('Không đủ Xu để mua!', false);
+        playSound('error', 0.5);
+    }
+}
+
+// Add event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    // Close market button
+    const closeMarket = document.querySelector('.close-market');
+    if (closeMarket) {
+        closeMarket.addEventListener('click', (e) => {
+            e.preventDefault();
+            hideMarket();
+        });
+    }
+    
+    // Buy buttons
+    const buyButtons = document.querySelectorAll('.buy-button');
+    buyButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const marketItem = button.closest('.market-item');
+            if (!marketItem.classList.contains('sold')) {
+                buyItem(marketItem);
+            }
+        });
+    });
+});
