@@ -94,7 +94,7 @@ class MemoryGame {
         const grid = document.querySelector('.memory-grid');
         grid.innerHTML = '';
 
-        switch(this.difficulty) {
+        switch (this.difficulty) {
             case 'easy':
                 grid.style.gridTemplateColumns = 'repeat(4, 1fr)';
                 grid.style.gridTemplateRows = 'repeat(2, 1fr)';
@@ -172,7 +172,7 @@ class MemoryGame {
 
     flipCard(cardElement) {
         if (!this.isPlaying || this.flippedCards.length >= 2 ||
-            cardElement.classList.contains('flipped') || 
+            cardElement.classList.contains('flipped') ||
             cardElement.classList.contains('matched')) return;
 
         cardElement.classList.add('flipped');
@@ -215,7 +215,9 @@ class MemoryGame {
 
         this.flippedCards = [];
 
-        if (this.matchedPairs === this.cards.length / 2) {
+        // Check if all pairs are matched
+        const totalPairs = this.cards.length / 2;
+        if (this.matchedPairs === totalPairs) {
             this.handleLevelComplete();
         }
     }
@@ -263,7 +265,27 @@ class MemoryGame {
         finalMoves.textContent = this.moves;
         finalScore.textContent = this.score;
 
-        // [Phần EXP, xu và phần thưởng cung hoàng đạo giữ nguyên như trước]
+        // Add rewards based on difficulty
+        let expReward = 0;
+        let coinReward = 0;
+        switch (this.difficulty) {
+            case 'easy':
+                expReward = 20;
+                coinReward = 10;
+                break;
+            case 'medium':
+                expReward = 40;
+                coinReward = 20;
+                break;
+            case 'hard':
+                expReward = 80;
+                coinReward = 40;
+                break;
+        }
+
+        // Save rewards to temporary storage
+        localStorage.setItem('tempExp', expReward);
+        localStorage.setItem('tempXu', coinReward);
 
         // Nút chơi lại
         const playAgainButton = levelComplete.querySelector('.play-again');
@@ -271,42 +293,49 @@ class MemoryGame {
             playAgainButton.onclick = () => this.resetAndReplay(levelComplete);
         }
 
+        // Update rewards display
+        const rewardsDisplay = document.createElement('div');
+        rewardsDisplay.className = 'rewards';
+        rewardsDisplay.innerHTML = `
+            <div class="exp-gained">+${expReward} EXP</div>
+            <div class="coin-gained">+${coinReward} Xu</div>
+        `;
+        
+        const levelCompleteButtons = levelComplete.querySelector('.level-complete-buttons');
+        if (levelCompleteButtons) {
+            levelCompleteButtons.insertBefore(rewardsDisplay, levelCompleteButtons.firstChild);
+        }
+
         levelComplete.style.display = 'flex';
         confetti();
         this.saveProgress();
+        this.isPlaying = false;
+        clearInterval(this.timerInterval);
+        this.timerInterval = null;
     }
 
     resetAndReplay(container) {
-        clearInterval(this.timerInterval);
-        this.timerInterval = null; // đảm bảo không có interval nào còn chạy
-    
-        this.matchedPairs = 0;
-        this.moves = 0;
-        this.score = 0;
-        this.consecutiveMatches = 0;
-        this.isPlaying = true;
-    
-        switch (this.difficulty) {
-            case 'easy': this.timer = 30; break;
-            case 'medium': this.timer = 45; break;
-            case 'hard': this.timer = 60; break;
+        // Ensure timer is completely stopped
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
         }
-    
-        document.querySelector('.moves').textContent = 'Lượt: 0';
-        document.querySelector('.current-score').textContent = 'Điểm: 0';
-    
-        this.updateTimer();
-        this.loadLevel();
-        this.startTimer();
-    
+
+        this.isPlaying = false;
+
+        // Hide game container and show difficulty selection
+        const gameContainer = document.querySelector('.container');
+        const difficultySelect = document.querySelector('.difficulty-select');
+
         if (container) container.style.display = 'none';
-        console.log("Starting timer", this.timer);
-        console.log("Clearing interval", this.timerInterval);
+        if (gameContainer) gameContainer.style.display = 'none';
+        if (difficultySelect) difficultySelect.style.display = 'flex';
     }
-    
+
 
     startTimer() {
         clearInterval(this.timerInterval);
+        this.timerInterval = null;
 
         switch (this.difficulty) {
             case 'easy': this.timer = 30; break;
@@ -321,6 +350,7 @@ class MemoryGame {
             this.updateTimer();
             if (this.timer <= 0) {
                 clearInterval(this.timerInterval);
+                this.timerInterval = null;
                 this.handleTimeUp();
             }
         }, 1000);

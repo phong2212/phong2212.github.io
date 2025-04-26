@@ -1819,12 +1819,12 @@ function showWelcomeGift() {
                     birthdayCloseButton.addEventListener('click', () => {
                         // Only add birthday rewards after user clicks close
                         if (window.zodiacSystem) {
-                            window.zodiacSystem.addMoney(500);
+                            window.zodiacSystem.addMoney(3000);
                             // Add 3 special presents
                             for (let i = 0; i < 3; i++) {
                                 window.zodiacSystem.addSpecialPresent();
                             }
-                            currentGameState.moneyEarned += 500;
+                            currentGameState.moneyEarned += 3000;
                             // Check money challenges and show completion notification
                             checkMoneyChallenges();
                         }
@@ -1971,6 +1971,7 @@ function buyItem(itemElement) {
                 type: 'market'
             };
             zodiacSystem.updateBackpackDisplay();
+            zodiacSystem.saveData(); // Save backpack data after adding item
         } else {
             showNotification('Ba lô đã đầy!', false);
             return;
