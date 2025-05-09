@@ -1769,9 +1769,10 @@ function showWelcomeGift() {
             setTimeout(() => {
                 const isMai = currentGameState.playerName === 'MAI';
                 const isPhu = currentGameState.playerName === 'PHU';
+                const isVi = currentGameState.playerName === 'VI';
 
                 // Create birthday effects
-                if (isMai || isPhu) {
+                if (isMai || isPhu || isVi) {
                     createBalloons();
                     createFireworks();
                     
@@ -1786,7 +1787,7 @@ function showWelcomeGift() {
                         <div class="challenge-content">
                             <i class="fas fa-birthday-cake"></i>
                             <h3>Chúc Mừng Sinh Nhật!</h3>
-                            <p>${isMai ? 'Chúc Mai có một ngày được một giấc ngủ ngon!' : 'Chúc tk loz snvv!'}</p>
+                            <p>${isMai ? 'Chúc Mai có một ngày được một giấc ngủ ngon!' : isPhu ? 'Chúc Phú có một ngày được một giấc ngủ ngon!' : 'Chúc chị 2 đi Đài Loan vui vẻ!'}</p>
                             <div class="challenge-rewards">
                                 <div class="reward-item">
                                     <i class="fas fa-gift"></i>
